@@ -31,3 +31,6 @@ npm-debug.log*
 
 # Misc temp files
 implementation_plan.md
+
+.vercel
+.env*.local
