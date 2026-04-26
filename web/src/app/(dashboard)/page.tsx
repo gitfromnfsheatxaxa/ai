@@ -91,11 +91,11 @@ export default function DashboardPage() {
       try {
         const [mr, ar] = await Promise.all([
           pb.collection('meetings').getList(1, 5, {
-            filter: `telegram_user_id = "${user.telegram_id}"`,
+            filter: `user_ai.telegram_id = "${user.telegram_id}"`,
             sort: '-created',
           }).catch(() => ({ items: [] })),
           pb.collection('action_items').getList(1, 6, {
-            filter: `user_ai.telegram_id = ${user.telegram_id} && completed = false`,
+            filter: `user_ai.telegram_id = "${user.telegram_id}" && completed = false`,
             sort: '-created',
           }).catch(() => ({ items: [] })),
         ]);

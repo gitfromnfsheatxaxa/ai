@@ -7,13 +7,12 @@ const nextConfig: NextConfig = {
   /* config options here */
   rewrites: async () => {
     return [
+      // Full PocketBase proxy — avoids CORS and mixed-content (HTTP PB from HTTPS Vercel).
+      // PocketBase client uses /pb-api as base URL on the browser;
+      // Next.js forwards /pb-api/:path* → http://34.56.67.158:8090/:path*
       {
-        source: '/api/pocketbase/:path*',
-        destination: 'http://34.56.67.158:8090/api/:path*',
-      },
-      {
-        source: '/api/files/:collection/:id/:filename',
-        destination: 'http://34.56.67.158:8090/api/files/:collection/:id/:filename',
+        source: '/pb-api/:path*',
+        destination: 'http://34.56.67.158:8090/:path*',
       },
     ];
   },

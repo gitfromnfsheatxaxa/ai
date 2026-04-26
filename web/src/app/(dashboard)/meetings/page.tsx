@@ -33,7 +33,7 @@ export default function MeetingsPage() {
     async function load() {
       try {
         const res = await pb.collection('meetings').getList(1, 50, {
-          filter: `telegram_user_id = "${user!.telegram_id}"`,
+          filter: `user_ai.telegram_id = "${user!.telegram_id}"`,
           sort: '-created',
         });
         setMeetings(res.items as unknown as Meeting[]);

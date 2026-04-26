@@ -33,11 +33,11 @@ export default function ProjectsPage() {
       try {
         const [meetingRes, actionRes] = await Promise.all([
           pb.collection('meetings').getFullList({
-            filter: `telegram_user_id = "${user!.telegram_id}"`,
+            filter: `user_ai.telegram_id = "${user!.telegram_id}"`,
             fields: 'project_tag,created',
           }).catch(() => []),
           pb.collection('action_items').getFullList({
-            filter: `user_ai.telegram_id = ${user!.telegram_id}`,
+            filter: `user_ai.telegram_id = "${user!.telegram_id}"`,
             fields: 'project,completed,created',
           }).catch(() => []),
         ]);

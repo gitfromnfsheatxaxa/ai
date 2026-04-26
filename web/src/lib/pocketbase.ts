@@ -4,14 +4,25 @@ import { User, AuthResult, Meeting, ActionItem } from '@/types';
 // PocketBase client instance
 let pbClient: PocketBase | null = null;
 
-const POCKETBASE_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://34.56.67.158:8090';
+const PB_DIRECT = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://34.56.67.158:8090';
+
+// On the browser use the Next.js proxy (/pb-api) to avoid CORS and mixed-content
+// (Vercel is HTTPS; PocketBase is HTTP — browsers block direct HTTP calls from HTTPS pages).
+// On the server (API routes, SSR) connect directly.
+function getPocketBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/pb-api';
+  }
+  return PB_DIRECT;
+}
 
 /**
  * Get or create the PocketBase client instance
  */
 export function getPocketBaseClient(): PocketBase {
   if (!pbClient) {
-    pbClient = new PocketBase(POCKETBASE_URL);
+    pbClient = new PocketBase(getPocketBaseUrl());
+    pbClient.autoCancellation(false);
   }
   return pbClient;
 }
@@ -49,13 +60,16 @@ export function isAuthenticated(): boolean {
 export function getCurrentUser(): User | null {
   const client = getPocketBaseClient();
   if (client.authStore.isValid) {
-    const model = client.authStore.model as RecordModel & User;
+    // SDK 0.22+ uses authStore.record; .model kept as deprecated alias
+    const model = ((client.authStore as any).record ??
+                   client.authStore.model) as RecordModel & User;
+    if (!model) return null;
     return {
       id: model.id,
       email: model.email,
       telegram_id: model.telegram_id,
       telegram_username: model.telegram_username,
-      full_name: model.full_name,
+      full_name: model.full_name || (model as any).name || '',
       language: model.language || 'en',
       avatar: model.avatar,
       created: model.created,
