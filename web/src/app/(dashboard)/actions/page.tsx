@@ -52,7 +52,7 @@ export default function ActionsPage() {
     const pb = getPocketBaseClient();
     try {
       const res = await pb.collection('action_items').getList(1, 200, {
-        filter: `user_ai.telegram_id = "${user.telegram_id}"`,
+        filter: `user_ai = "${user.id}"`,
         sort: '-created',
       });
       setActions(res.items as unknown as Action[]);
