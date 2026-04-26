@@ -17,12 +17,11 @@ type Status   = 'todo' | 'in_progress' | 'done';
 
 interface Action {
   id: string;
-  task: string;
+  task?: string;
   description?: string;
-  assignee: string;
-  due_date: string;
-  priority: Priority;
-  completed: boolean;
+  assignee?: string;
+  due_date?: string;
+  priority?: Priority;
   status: Status;
   meeting: string;
   created: string;
@@ -68,29 +67,35 @@ export default function ActionsPage() {
   const toggle = async (action: Action) => {
     setToggling(action.id);
     const pb = getPocketBaseClient();
+    const newStatus: Status = action.status === 'done' ? 'todo' : 'done';
+    // Optimistically update UI immediately
+    setActions(prev =>
+      prev.map(a => a.id === action.id ? { ...a, status: newStatus } : a)
+    );
     try {
-      const newCompleted = !action.completed;
-      await pb.collection('action_items').update(action.id, {
-        completed: newCompleted,
-        status: newCompleted ? 'done' : 'todo',
-      });
+      await pb.collection('action_items').update(action.id, { status: newStatus });
+    } catch (e) {
+      // Revert on failure
+      console.error('Failed to update action status:', e);
       setActions(prev =>
-        prev.map(a => a.id === action.id ? { ...a, completed: newCompleted, status: newCompleted ? 'done' : 'todo' } : a)
+        prev.map(a => a.id === action.id ? { ...a, status: action.status } : a)
       );
     } finally {
       setToggling(null);
     }
   };
 
+  const isDone = (a: Action) => a.status === 'done';
+
   const visible = actions
-    .filter(a => filter === 'all' ? true : filter === 'done' ? a.completed : !a.completed)
+    .filter(a => filter === 'all' ? true : filter === 'done' ? isDone(a) : !isDone(a))
     .sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+      if (isDone(a) !== isDone(b)) return isDone(a) ? 1 : -1;
+      return (PRIORITY_ORDER[a.priority ?? 'low'] ?? 2) - (PRIORITY_ORDER[b.priority ?? 'low'] ?? 2);
     });
 
-  const open = actions.filter(a => !a.completed).length;
-  const done = actions.filter(a =>  a.completed).length;
+  const open = actions.filter(a => !isDone(a)).length;
+  const done = actions.filter(a =>  isDone(a)).length;
   const pct  = actions.length ? Math.round((done / actions.length) * 100) : 0;
 
   return (
@@ -174,7 +179,7 @@ export default function ActionsPage() {
                     >
                       {toggling === action.id
                         ? <Loader2 className="w-5 h-5 animate-spin text-teal-500" />
-                        : action.completed
+                        : isDone(action)
                         ? <CheckCircle2 className="w-5 h-5 text-teal-500" />
                         : <Circle className="w-5 h-5 text-gray-300 hover:text-teal-400" />
                       }
@@ -182,7 +187,7 @@ export default function ActionsPage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium leading-snug ${action.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                      <p className={`text-sm font-medium leading-snug ${isDone(action) ? 'line-through text-gray-400' : 'text-gray-800'}`}>
                         {action.task || action.description || '(no title)'}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 mt-2">

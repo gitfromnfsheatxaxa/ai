@@ -38,7 +38,7 @@ function StatCard({ label, value, delta, icon }: { label: string; value: string 
         <div style={{ fontSize: 12, color: '#64748b', fontFamily: 'Inter, sans-serif' }}>{label}</div>
         <div style={{ color: TEAL, opacity: 0.7 }}>{icon}</div>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", color: '#0f172a', lineHeight: 1 }}>
+      <div style={{ fontSize: 26, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", color: 'teal', lineHeight: 1 }}>
         {value}
       </div>
       {delta !== undefined && (
@@ -76,9 +76,10 @@ function AvatarRow({ names }: { names: string[] }) {
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [actions,  setActions]  = useState<any[]>([]);
-  const [loading,  setLoading]  = useState(true);
+  const [meetings,      setMeetings]      = useState<any[]>([]);
+  const [actions,       setActions]       = useState<any[]>([]);
+  const [totalMeetings, setTotalMeetings] = useState(0);
+  const [loading,       setLoading]       = useState(true);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -93,31 +94,49 @@ export default function DashboardPage() {
           pb.collection('meetings').getList(1, 5, {
             filter: `user_ai = "${user.id}"`,
             sort: '-created',
-          }).catch(() => ({ items: [] })),
-          pb.collection('action_items').getList(1, 6, {
-            filter: `user_ai = "${user.id}" && completed = false`,
+          }).catch(() => ({ items: [], totalItems: 0 })),
+          // Load ALL actions — filter client-side so null/empty status values aren't missed
+          pb.collection('action_items').getList(1, 50, {
+            filter: `user_ai = "${user.id}"`,
             sort: '-created',
-          }).catch(() => ({ items: [] })),
+          }).catch(() => ({ items: [], totalItems: 0 })),
         ]);
         setMeetings(mr.items);
         setActions(ar.items);
+        setTotalMeetings((mr as any).totalItems ?? mr.items.length);
       } finally {
         setLoading(false);
       }
     })();
   }, [user]);
 
-  const openActions = actions.filter((a: any) => !a.completed);
-  const totalMtgs  = meetings.length;
-  const avgDur     = meetings.length
-    ? Math.round(meetings.reduce((s, m) => s + (m.duration || 0), 0) / meetings.length / 60)
+  const openActions    = actions.filter((a: any) => a.status !== 'done' && !a.completed);
+  const completedCount = actions.filter((a: any) => a.status === 'done' || a.completed).length;
+  const totalMtgs      = totalMeetings || meetings.length;
+  // Estimate avg length from transcript word count (130 wpm speaking rate)
+  const avgDur = meetings.length
+    ? (() => {
+        const withDuration = meetings.filter(m => m.duration);
+        if (withDuration.length) {
+          return Math.round(withDuration.reduce((s, m) => s + m.duration, 0) / withDuration.length / 60);
+        }
+        const withTranscript = meetings.filter(m => m.transcript || m.raw_transcript);
+        if (withTranscript.length) {
+          const avgWords = withTranscript.reduce((s, m) => {
+            const t = (m.transcript || m.raw_transcript || '');
+            return s + t.split(/\s+/).filter(Boolean).length;
+          }, 0) / withTranscript.length;
+          return Math.max(1, Math.round(avgWords / 130));
+        }
+        return 0;
+      })()
     : 0;
 
   return (
-    <div style={{ display: 'flex', height: '100%', gap: 20 }}>
+    <div className="flex flex-col lg:flex-row gap-5">
 
       {/* ── Left main column ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+      <div className="flex flex-col gap-4 min-w-0 flex-1">
 
         {/* Welcome */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -130,11 +149,11 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-          <StatCard label="Meetings this week" value={totalMtgs}  icon={<Calendar size={14} />} delta={8} />
-          <StatCard label="Actions completed"  value={0}          icon={<CheckSquare size={14} />} delta={15} />
-          <StatCard label="Avg. meeting length" value={avgDur ? `${avgDur}m` : '—'} icon={<Clock size={14} />} />
-          <StatCard label="AI summaries"       value={meetings.filter(m => m.summary).length} icon={<Sparkles size={14} />} delta={20} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard label="Total meetings"      value={totalMtgs}       icon={<Calendar size={14} />} />
+          <StatCard label="Actions completed"  value={completedCount}  icon={<CheckSquare size={14} />} />
+          <StatCard label="Avg. meeting length" value={avgDur ? `~${avgDur}m` : '—'} icon={<Clock size={14} />} />
+          <StatCard label="AI summaries"       value={meetings.filter(m => m.summary).length} icon={<Sparkles size={14} />} />
         </div>
 
         {/* Today's Meetings */}
@@ -212,7 +231,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Right sidebar ── */}
-      <div style={{ width: 280, display: 'flex', flexDirection: 'column', gap: 14, flexShrink: 0 }}>
+      <div className="flex flex-col gap-4 w-full lg:w-72 lg:flex-shrink-0">
 
         {/* AI Insight */}
         <div style={{
@@ -243,7 +262,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Open Actions */}
-        <div style={{ ...g(0.55), padding: 16, flex: 1 }}>
+        <div style={{ ...g(0.55), padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
               Open Actions

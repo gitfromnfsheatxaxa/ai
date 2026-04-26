@@ -473,7 +473,7 @@ export async function handleWebLogin(ctx: Context): Promise<void> {
     const userAiId = await getOrCreateUserAI(pb, from.id, from.username, from.first_name);
     const token    = await createLoginToken(pb, userAiId);
 
-    const baseUrl = process.env.WEB_APP_URL || 'https://ai-notes-meeting.vercel.app/';
+    const baseUrl = process.env.WEB_APP_URL || 'http://localhost:3000/';
     const url     = `${baseUrl.replace(/\/$/, '')}/auth/verify?t=${token}`;
     const minutes = Math.round(TOKEN_TTL_SECONDS / 60);
 

@@ -98,13 +98,15 @@ export async function createMeetingRecord(
     const meeting = await pb.collection('meetings').create(meetingDataForPB);
     const meetingId = meeting.id;
 
-    // Create action items and collect their IDs
+    // Create action items — each is independent; one failure must not abort the rest
     const actionItemIds: string[] = [];
 
-    if (meetingData.action_items && meetingData.action_items.length > 0) {
-      for (const item of meetingData.action_items) {
-        const actionItemId = await createActionItem(pb, meetingId, userAiId, item);
-        actionItemIds.push(actionItemId);
+    for (const item of (meetingData.action_items ?? [])) {
+      try {
+        const id = await createActionItem(pb, meetingId, userAiId, item);
+        actionItemIds.push(id);
+      } catch (err) {
+        console.error('[createMeetingRecord] skipped action item:', err instanceof Error ? err.message : err);
       }
     }
 
@@ -124,21 +126,24 @@ export async function createActionItem(
   userId: string,
   actionItem: ActionItem
 ): Promise<string> {
+  const description = (actionItem.task || '').trim();
+  if (!description) throw new Error('Action item has empty task — skipped');
+
   try {
     const actionItemData: Partial<PocketBaseActionItem> = {
-      user_ai: userId,
-      meeting: meetingId,
-      description: actionItem.task,
-      assignee: actionItem.assignee,
-      due_date: actionItem.due_date,
-      status: 'todo',
+      user_ai:     userId,
+      meeting:     meetingId,
+      description,
+      assignee:    actionItem.assignee?.trim() || undefined,
+      due_date:    actionItem.due_date?.trim() || undefined,
+      status:      'todo',
     };
 
-    const actionItemRecord = await pb.collection('action_items').create(actionItemData);
-    return actionItemRecord.id;
+    const record = await pb.collection('action_items').create(actionItemData);
+    return record.id;
   } catch (error) {
     console.error('Error creating action item:', error);
-    throw new Error('Failed to create action item in PocketBase');
+    throw new Error(`Failed to save action item: ${error instanceof Error ? error.message : error}`);
   }
 }
 

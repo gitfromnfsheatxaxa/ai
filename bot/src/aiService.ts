@@ -304,15 +304,24 @@ function parseActionItem(item: unknown): {
   due_date?: string;
   priority?: 'low' | 'medium' | 'high';
 } {
-  if (typeof item === 'string') return { task: item };
+  if (typeof item === 'string') {
+    const t = item.trim();
+    return { task: t || 'Unspecified task' };
+  }
 
   if (typeof item === 'object' && item !== null) {
     const o = item as Record<string, unknown>;
+    // Accept common LLM field-name variants: task / description / action / title
+    const raw = o.task ?? o.description ?? o.action ?? o.title ?? '';
+    const task = (typeof raw === 'string' ? raw : String(raw ?? '')).trim();
+    const priority = o.priority as string | undefined;
     return {
-      task:     (o.task as string) || 'Unspecified task',
-      assignee: o.assignee  ? (o.assignee  as string) : undefined,
-      due_date: o.due_date  ? (o.due_date  as string) : undefined,
-      priority: o.priority  ? (o.priority  as 'low' | 'medium' | 'high') : undefined,
+      task:     task || 'Unspecified task',
+      assignee: o.assignee ? String(o.assignee).trim() || undefined : undefined,
+      due_date: o.due_date ? String(o.due_date).trim() || undefined : undefined,
+      priority: (['low', 'medium', 'high'] as const).includes(priority as any)
+        ? (priority as 'low' | 'medium' | 'high')
+        : undefined,
     };
   }
 

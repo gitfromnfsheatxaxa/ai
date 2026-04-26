@@ -40,10 +40,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div style={{
-      width: '100vw', height: '100vh',
+      minHeight: '100dvh',
       background: BG,
-      display: 'flex', overflow: 'hidden',
+      display: 'flex',
       transition: 'background 400ms ease',
+      overflow: 'hidden',
     }}>
 
       {/* ── Sidebar (desktop) ── */}
@@ -52,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* ── Main content ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
 
         {/* Top bar */}
         <div style={{
@@ -82,7 +83,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Page scroll area */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+        <main
+          style={{ flex: 1, overflowY: 'auto', padding: 24 }}
+          className="pb-28 md:pb-6"
+        >
           {children}
         </main>
       </div>

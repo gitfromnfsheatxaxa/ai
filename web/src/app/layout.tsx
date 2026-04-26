@@ -23,7 +23,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} min-h-full flex flex-col font-sans`}>
+      <body className={`${inter.variable} min-h-full flex flex-col font-sans`} suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
