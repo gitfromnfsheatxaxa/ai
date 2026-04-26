@@ -119,7 +119,7 @@ export default function MeetingsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-semibold text-gray-800 truncate">
-                        {meeting.title || 'Untitled Meeting'}
+                        {meeting.title || meeting.project_tag || 'Untitled Meeting'}
                       </h3>
                       <Badge variant="success">completed</Badge>
                     </div>

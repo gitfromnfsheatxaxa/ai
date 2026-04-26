@@ -79,7 +79,7 @@ export default function MeetingDetailPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-800">{meeting.title || 'Untitled Meeting'}</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{meeting.title || meeting.project_tag || 'Untitled Meeting'}</h1>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />

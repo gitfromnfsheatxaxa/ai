@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 type RecState = 'idle' | 'recording' | 'processing' | 'done' | 'error';
 
 interface Result {
+  title:        string;
   transcript:   string;
   summary:      string;
   decisions:    string[];
@@ -113,7 +114,7 @@ function ResultScreen({ result, duration, onReset }: { result: Result; duration:
             Meeting complete · {fmt(duration)}
           </div>
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 22, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            {result.project_tag || 'Meeting Notes'}
+            {result.title || result.project_tag || 'Meeting Notes'}
           </div>
           {result.topics.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>

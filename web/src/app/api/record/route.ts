@@ -8,17 +8,22 @@ const PB_URL       = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://34.56.67.
 const PB_EMAIL     = process.env.POCKETBASE_ADMIN_EMAIL    || '';
 const PB_PASS      = process.env.POCKETBASE_ADMIN_PASSWORD  || '';
 
-const SYSTEM_PROMPT = `You are an expert meeting analyst. Analyze the transcript and return a JSON object with:
+const SYSTEM_PROMPT = `You are an expert meeting analyst. Analyze the transcript and return a JSON object with exactly these fields:
 {
+  "title": "Descriptive meeting title (5-8 words, e.g. 'Q3 Roadmap Review with Design Team')",
   "summary": "2-4 sentences covering what was discussed and decided",
   "decisions": ["decision 1", "decision 2"],
   "topics": ["topic 1", "topic 2"],
-  "project_tag": "short project name or General",
+  "project_tag": "Short project or team name (1-3 words, e.g. 'Product', 'Engineering', 'General')",
   "action_items": [
-    { "task": "task description", "assignee": "name or null", "due_date": null, "priority": "high|medium|low" }
+    { "task": "task description", "assignee": "person name or null", "due_date": null, "priority": "high|medium|low" }
   ]
 }
-Be thorough. Return valid JSON only. Understand Uzbek, Russian, English and any mix.`;
+Rules:
+- title must be specific and descriptive — never "General Meeting" or "Untitled"
+- project_tag is a short category (not the title)
+- Return valid JSON only
+- Understand Uzbek, Russian, English and any mix`;
 
 export async function POST(req: NextRequest) {
   if (!GROQ_KEY) {
@@ -110,6 +115,7 @@ export async function POST(req: NextRequest) {
 
       const meeting = await pb.collection('meetings').create({
         user_ai:       userAiId,
+        title:         analysis.title       || analysis.project_tag || 'Meeting',
         transcript:    transcript,
         summary:       analysis.summary     || '',
         decisions:     analysis.decisions   || [],
@@ -139,6 +145,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
+    title:        analysis.title       || analysis.project_tag || 'Meeting',
     transcript,
     summary:      analysis.summary     || '',
     decisions:    analysis.decisions   || [],
