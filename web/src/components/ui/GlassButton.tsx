@@ -84,7 +84,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       className
     );
 
-    return (
+return (
       <motion.button
         ref={ref}
         className={baseClasses}
@@ -92,7 +92,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         whileHover={{ scale: disabled || isLoading ? 1 : 1.02 }}
         whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
         transition={{ duration: 0.15 }}
-        {...props}
+        {...(props as any)}
       >
         {isLoading ? (
           <svg
