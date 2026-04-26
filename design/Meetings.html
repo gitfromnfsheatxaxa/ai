@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoteAI — Meetings</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { width: 100%; height: 100%; }
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 99px; }
+  ::selection { background: rgba(20,184,166,0.2); }
+  input, button { font-family: inherit; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px; opacity: 0.5;
+  }
+  #root { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ── Design tokens ───────────────────────────────────────────────────
+const TEAL = '#14b8a6';
+const BG = 'radial-gradient(ellipse at 15% 40%, rgba(20,184,166,0.10) 0%, transparent 55%), radial-gradient(ellipse at 85% 15%, rgba(148,163,184,0.10) 0%, transparent 50%), radial-gradient(ellipse at 60% 85%, rgba(99,102,241,0.07) 0%, transparent 50%), #f0f4f8';
+
+const glass = (opacity = 0.55) => ({
+  background: `rgba(255,255,255,${opacity})`,
+  backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+  border: '1px solid rgba(255,255,255,0.75)',
+  boxShadow: '0 2px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)',
+});
+
+// ── Icons ───────────────────────────────────────────────────────────
+const Ic = {
+  back: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+  search: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  mic: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+  plus: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  clock: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  users: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  check: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  ai: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  edit: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  share: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+  download: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  filter: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  grid: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  list: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>,
+  zap: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  more: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+  arrow: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+};
+
+// ── Tiny components ─────────────────────────────────────────────────
+function Avatar({ name = 'U', size = 32 }) {
+  const colors = ['#14b8a6','#6366f1','#f59e0b','#ec4899','#3b82f6','#10b981'];
+  const c = colors[name.charCodeAt(0) % colors.length];
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: `${c}22`, border: `1.5px solid ${c}44`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.38, fontWeight: 600,
+      color: c, flexShrink: 0, fontFamily: 'DM Sans, sans-serif' }}>
+      {name[0].toUpperCase()}
+    </div>
+  );
+}
+
+function Avatars({ names, size = 26, max = 4 }) {
+  const shown = names.slice(0, max);
+  const rest = names.length - max;
+  const gap = Math.round(size * 0.22);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      {shown.map((n, i) => (
+        <div key={i} style={{
+          marginLeft: i === 0 ? 0 : -gap,
+          position: 'relative', zIndex: shown.length - i, flexShrink: 0,
+          borderRadius: '50%', outline: '2.5px solid rgba(255,255,255,0.95)',
+          outlineOffset: '0px',
+        }}>
+          <Avatar name={n} size={size} />
+        </div>
+      ))}
+      {rest > 0 && (
+        <div style={{
+          marginLeft: -gap, position: 'relative', zIndex: 0, flexShrink: 0,
+          width: size, height: size, borderRadius: '50%',
+          background: 'rgba(100,116,139,0.15)', color: '#475569',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: size * 0.34, fontWeight: 600, fontFamily: 'Inter, sans-serif',
+          outline: '2.5px solid rgba(255,255,255,0.95)',
+        }}>+{rest}</div>
+      )}
+    </div>
+  );
+}
+
+function Badge({ children, color = 'teal', dot }) {
+  const map = {
+    teal:   { bg:'rgba(20,184,166,0.12)',  text:'#0d9488',  d:'#14b8a6' },
+    blue:   { bg:'rgba(59,130,246,0.12)',  text:'#2563eb',  d:'#3b82f6' },
+    amber:  { bg:'rgba(245,158,11,0.12)',  text:'#d97706',  d:'#f59e0b' },
+    red:    { bg:'rgba(239,68,68,0.10)',   text:'#dc2626',  d:'#ef4444' },
+    slate:  { bg:'rgba(100,116,139,0.12)', text:'#475569',  d:'#94a3b8' },
+    purple: { bg:'rgba(139,92,246,0.12)',  text:'#7c3aed',  d:'#8b5cf6' },
+    green:  { bg:'rgba(16,185,129,0.12)',  text:'#059669',  d:'#10b981' },
+  };
+  const c = map[color] || map.teal;
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:c.bg, color:c.text,
+      padding:'3px 9px', borderRadius:99, fontSize:12, fontWeight:500, fontFamily:'Inter, sans-serif', whiteSpace:'nowrap' }}>
+      {dot && <span style={{ width:6, height:6, borderRadius:'50%', background:c.d, flexShrink:0 }} />}
+      {children}
+    </span>
+  );
+}
+
+function Btn({ children, variant='primary', size='md', icon, onClick, style }) {
+  const [a, setA] = React.useState(false);
+  const sz = { sm:{ padding:'5px 13px', fontSize:12.5 }, md:{ padding:'8px 18px', fontSize:13.5 }, lg:{ padding:'11px 26px', fontSize:14.5 } };
+  const vs = {
+    primary: { background:`linear-gradient(135deg,${TEAL},#0d9488)`, color:'#fff', border:'none', boxShadow:`0 2px 12px rgba(20,184,166,0.3)` },
+    ghost:   { background:'rgba(255,255,255,0.5)', backdropFilter:'blur(12px)', color:'#334155', border:'1px solid rgba(255,255,255,0.7)', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' },
+    subtle:  { background:'rgba(20,184,166,0.1)', color:TEAL, border:'none' },
+    outline: { background:'transparent', color:TEAL, border:`1px solid ${TEAL}` },
+  };
+  return (
+    <button onClick={onClick} onMouseDown={()=>setA(true)} onMouseUp={()=>setA(false)}
+      style={{ ...sz[size], ...vs[variant], borderRadius:10, fontFamily:'Inter,sans-serif', fontWeight:500, cursor:'pointer',
+        display:'inline-flex', alignItems:'center', gap:6, transition:'transform 150ms, opacity 150ms',
+        transform:a?'scale(0.97)':'scale(1)', outline:'none', whiteSpace:'nowrap', ...style }}>
+      {icon && <span style={{ display:'flex' }}>{icon}</span>}{children}
+    </button>
+  );
+}
+
+function GCard({ children, style, onClick }) {
+  const [h, setH] = React.useState(false);
+  return (
+    <div onClick={onClick} onMouseEnter={()=>onClick&&setH(true)} onMouseLeave={()=>setH(false)}
+      style={{ ...glass(0.55), borderRadius:16, transition:'transform 250ms, box-shadow 250ms',
+        transform: h?'translateY(-2px)':'none', cursor:onClick?'pointer':'default',
+        boxShadow: h?'0 6px 32px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.9)':'0 2px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)',
+        ...style }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Data ────────────────────────────────────────────────────────────
+const MEETINGS = [
+  { id:1,  title:'Q3 Product Roadmap Review',       date:'Today',     time:'10:00 AM', duration:'52 min',  attendees:['Alice','Bob','Carol','Dan'],          status:'completed',   project:'Product', actions:4,  tags:['planning','roadmap']  },
+  { id:2,  title:'Design System Sprint Planning',   date:'Today',     time:'1:30 PM',  duration:'38 min',  attendees:['Eve','Frank'],                        status:'completed',   project:'Design',  actions:2,  tags:['design','sprint']     },
+  { id:3,  title:'Investor Update Prep',            date:'Today',     time:'3:00 PM',  duration:'24 min',  attendees:['Alice','Grace','Hank'],               status:'in-progress', project:'Finance', actions:0,  tags:['investor','finance']  },
+  { id:4,  title:'Engineering Sync',                date:'Yesterday', time:'9:00 AM',  duration:'45 min',  attendees:['Bob','Ivan','Judy'],                  status:'completed',   project:'Eng',     actions:3,  tags:['engineering']         },
+  { id:5,  title:'Customer Feedback Review',        date:'Yesterday', time:'2:00 PM',  duration:'60 min',  attendees:['Carol','Alice'],                      status:'completed',   project:'Product', actions:5,  tags:['customer','feedback'] },
+  { id:6,  title:'Weekly All Hands',                date:'Mon',       time:'10:00 AM', duration:'30 min',  attendees:['Alice','Bob','Carol','Dan','Eve','Frank'], status:'completed', project:'Company', actions:1, tags:['company']            },
+  { id:7,  title:'Q4 Planning Kickoff',             date:'Fri',       time:'2:00 PM',  duration:'—',       attendees:['Alice','Bob','Carol'],                status:'scheduled',   project:'Product', actions:0,  tags:['planning','q4']       },
+  { id:8,  title:'API Design Review',               date:'Mon',       time:'11:00 AM', duration:'55 min',  attendees:['Dan','Ivan','Bob'],                   status:'completed',   project:'Eng',     actions:6,  tags:['api','engineering']   },
+  { id:9,  title:'Marketing Campaign Brief',        date:'Last week', time:'3:30 PM',  duration:'42 min',  attendees:['Grace','Alice','Carol'],              status:'completed',   project:'Design',  actions:3,  tags:['marketing']           },
+];
+
+const TRANSCRIPT_LINES = [
+  { speaker:'Alice', time:'0:00', avatar:'A', text:'Alright, let\'s kick off the Q3 roadmap review. Carol, can you walk us through the updated feature list?' },
+  { speaker:'Carol', time:'0:42', avatar:'C', text:'Sure. We\'ve scoped v2.3 to include the new onboarding flow, the token migration for design systems, and the AI summary improvements. Timeline is six weeks.' },
+  { speaker:'Bob',   time:'1:15', avatar:'B', text:'Six weeks feels tight. The token migration alone could be two weeks if we hit blockers on the legacy components.' },
+  { speaker:'Carol', time:'1:38', avatar:'C', text:'Agreed. Let\'s set a checkpoint at week two. I\'ll finalize the spec doc by Thursday and share it for review.' },
+  { speaker:'Alice', time:'2:10', avatar:'A', text:'Perfect. Dan, are the API contracts ready for the AI summary feature?' },
+  { speaker:'Dan',   time:'2:24', avatar:'D', text:'Almost. I need one more day to finalize the streaming endpoint. Should be done by EOD tomorrow.' },
+  { speaker:'Alice', time:'2:45', avatar:'A', text:'Great. Let\'s make sure we loop in QA early this cycle — last sprint they felt rushed on testing.' },
+  { speaker:'Bob',   time:'3:02', avatar:'B', text:'Agreed, I\'ll set up a QA sync for next Monday. Should we also consider a beta group for the onboarding flow?' },
+  { speaker:'Carol', time:'3:20', avatar:'C', text:'Yes, I\'ll identify five pilot customers by end of week. We can run a two-week beta starting week four.' },
+];
+
+const ACTIONS_LIST = [
+  { id:1, text:'Finalize v2.3 feature specs', assignee:'Carol', due:'Thursday', priority:'high',   done:false, source:'0:42' },
+  { id:2, text:'Review token migration PR',   assignee:'Bob',   due:'Friday',   priority:'medium', done:false, source:'1:15' },
+  { id:3, text:'Finalize streaming API endpoint', assignee:'Dan', due:'Tomorrow', priority:'high', done:false, source:'2:24' },
+  { id:4, text:'Set up QA sync for Monday',   assignee:'Bob',   due:'Today',    priority:'medium', done:false, source:'3:02' },
+  { id:5, text:'Identify 5 beta pilot customers', assignee:'Carol', due:'Fri',  priority:'low',   done:false, source:'3:20' },
+  { id:6, text:'Share checkpoint plan',        assignee:'Alice', due:'Done',    priority:'low',    done:true,  source:'1:38' },
+];
+
+const projectColors = { Product:'teal', Design:'purple', Finance:'amber', Eng:'blue', Company:'slate', default:'slate' };
+
+// ══════════════════════════════════════════════════════════════════
+// MEETINGS LIST PAGE
+// ══════════════════════════════════════════════════════════════════
+function MeetingsPage({ onSelect }) {
+  const [search, setSearch]   = React.useState('');
+  const [filter, setFilter]   = React.useState('all');
+  const [viewMode, setViewMode] = React.useState('list'); // list | grid
+  const [focused, setFocused] = React.useState(false);
+
+  const filters = [
+    { id:'all', label:'All' },
+    { id:'completed', label:'Done' },
+    { id:'in-progress', label:'Live' },
+    { id:'scheduled', label:'Upcoming' },
+  ];
+
+  const shown = MEETINGS.filter(m => {
+    const matchFilter = filter === 'all' || m.status === filter;
+    const matchSearch = !search || m.title.toLowerCase().includes(search.toLowerCase()) ||
+      m.attendees.some(a => a.toLowerCase().includes(search.toLowerCase())) ||
+      m.project.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  const groups = [
+    { label: 'Today',     items: shown.filter(m => m.date === 'Today') },
+    { label: 'Yesterday', items: shown.filter(m => m.date === 'Yesterday') },
+    { label: 'Earlier',   items: shown.filter(m => m.date !== 'Today' && m.date !== 'Yesterday') },
+  ].filter(g => g.items.length > 0);
+
+  return (
+    <div style={{ height:'100vh', background: BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {/* Header */}
+      <div style={{ ...glass(0.45), borderBottom:'1px solid rgba(255,255,255,0.6)', borderRadius:0, padding:'20px 32px 0', flexShrink:0 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:18 }}>
+          <div>
+            <div style={{ fontSize:11, fontFamily:'Inter,sans-serif', fontWeight:600, color:TEAL, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:4 }}>
+              {shown.length} meetings
+            </div>
+            <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:28, color:'#0f172a', letterSpacing:'-0.02em' }}>
+              Meetings
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:4 }}>
+            <Btn variant="ghost" size="sm" icon={<Ic.filter />}>Filter</Btn>
+            <Btn variant="primary" size="md" icon={<Ic.plus />}>New Recording</Btn>
+          </div>
+        </div>
+
+        {/* Search + controls row */}
+        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16 }}>
+          <div style={{ flex:1, display:'flex', alignItems:'center', gap:8,
+            background: focused?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.55)',
+            border: focused?`1px solid ${TEAL}55`:'1px solid rgba(255,255,255,0.7)',
+            borderRadius:11, padding:'9px 14px', boxShadow: focused?`0 0 0 3px ${TEAL}12`:'none', transition:'all 200ms' }}>
+            <span style={{ color:'#94a3b8', display:'flex', flexShrink:0 }}><Ic.search /></span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search meetings, people, projects…"
+              onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+              style={{ border:'none', background:'transparent', outline:'none', fontSize:13.5, color:'#1e293b', width:'100%' }} />
+            {search && <button onClick={()=>setSearch('')} style={{ border:'none',background:'none',cursor:'pointer',color:'#94a3b8',fontSize:16,lineHeight:1,flexShrink:0 }}>×</button>}
+          </div>
+
+          {/* Status filters */}
+          <div style={{ display:'flex', gap:3, background:'rgba(255,255,255,0.45)', borderRadius:10, padding:3, border:'1px solid rgba(255,255,255,0.65)', flexShrink:0 }}>
+            {filters.map(f => (
+              <button key={f.id} onClick={()=>setFilter(f.id)} style={{
+                padding:'5px 14px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12.5,
+                fontFamily:'Inter,sans-serif', fontWeight:500, transition:'all 180ms',
+                background: filter===f.id?'rgba(255,255,255,0.95)':'transparent',
+                color: filter===f.id?'#0f172a':'#64748b',
+                boxShadow: filter===f.id?'0 1px 5px rgba(0,0,0,0.08)':'none',
+              }}>{f.label}</button>
+            ))}
+          </div>
+
+          {/* View toggle */}
+          <div style={{ display:'flex', gap:2, background:'rgba(255,255,255,0.45)', borderRadius:8, padding:3, border:'1px solid rgba(255,255,255,0.65)', flexShrink:0 }}>
+            {[['list',<Ic.list />],['grid',<Ic.grid />]].map(([mode, ico]) => (
+              <button key={mode} onClick={()=>setViewMode(mode)} style={{
+                width:30, height:28, borderRadius:6, border:'none', cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', transition:'all 180ms',
+                background: viewMode===mode?'rgba(255,255,255,0.95)':'transparent',
+                color: viewMode===mode?TEAL:'#94a3b8',
+                boxShadow: viewMode===mode?'0 1px 4px rgba(0,0,0,0.07)':'none',
+              }}>{ico}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflowY:'auto', padding:'20px 32px 32px' }}>
+        {viewMode === 'list' ? (
+          groups.map(group => (
+            <div key={group.label} style={{ marginBottom:28 }}>
+              <div style={{ fontSize:11.5, fontWeight:600, color:'#94a3b8', letterSpacing:'0.07em', textTransform:'uppercase',
+                fontFamily:'Inter,sans-serif', marginBottom:10, display:'flex', alignItems:'center', gap:10 }}>
+                {group.label}
+                <div style={{ flex:1, height:1, background:'rgba(148,163,184,0.15)' }} />
+                <span style={{ fontWeight:400 }}>{group.items.length}</span>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {group.items.map(m => <MeetingListRow key={m.id} m={m} onSelect={onSelect} />)}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px,1fr))', gap:14 }}>
+            {shown.map(m => <MeetingGridCard key={m.id} m={m} onSelect={onSelect} />)}
+          </div>
+        )}
+        {shown.length === 0 && (
+          <div style={{ textAlign:'center', padding:'60px 0', color:'#94a3b8', fontFamily:'Inter,sans-serif' }}>
+            <div style={{ fontSize:36, marginBottom:12 }}>🔍</div>
+            <div style={{ fontSize:15, fontWeight:500 }}>No meetings found</div>
+            <div style={{ fontSize:13, marginTop:4 }}>Try a different search or filter</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MeetingListRow({ m, onSelect }) {
+  const [hov, setHov] = React.useState(false);
+  const isLive = m.status === 'in-progress';
+  return (
+    <div onClick={()=>onSelect(m)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 16px', borderRadius:14, cursor:'pointer', transition:'all 200ms',
+        background: hov?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.5)',
+        border: isLive?`1px solid rgba(20,184,166,0.3)`:'1px solid rgba(255,255,255,0.7)',
+        boxShadow: isLive?`0 0 0 2px rgba(20,184,166,0.08), ${hov?'0 4px 16px rgba(0,0,0,0.07)':'none'}`:(hov?'0 4px 16px rgba(0,0,0,0.06)':'none'),
+        transform: hov?'translateY(-1px)':'none',
+      }}>
+      {/* Icon */}
+      <div style={{ width:42, height:42, borderRadius:11, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+        background: isLive?'rgba(20,184,166,0.12)': m.status==='scheduled'?'rgba(99,102,241,0.08)':'rgba(148,163,184,0.1)',
+        color: isLive?TEAL: m.status==='scheduled'?'#6366f1':'#94a3b8',
+        border: isLive?`1px solid rgba(20,184,166,0.2)`:'1px solid rgba(226,232,240,0.5)' }}>
+        <Ic.mic />
+      </div>
+
+      {/* Title + meta */}
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:600, fontSize:14.5, color:'#0f172a',
+          whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', marginBottom:3 }}>{m.title}</div>
+        <div style={{ fontSize:12, color:'#94a3b8', fontFamily:'Inter,sans-serif', display:'flex', gap:10, alignItems:'center' }}>
+          <span style={{ display:'flex', alignItems:'center', gap:3 }}><Ic.clock />{m.date === 'Today' || m.date === 'Yesterday' ? m.date+', ' : m.date+' · '}{m.time}</span>
+          {m.duration !== '—' && <><span>·</span><span>{m.duration}</span></>}
+          {m.tags.slice(0,2).map(t => (
+            <span key={t} style={{ padding:'1px 7px', borderRadius:99, background:'rgba(148,163,184,0.1)', fontSize:11, color:'#94a3b8' }}>#{t}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Right side */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+        <Avatars names={m.attendees} size={24} max={3} />
+        <Badge color={projectColors[m.project]||'slate'}>{m.project}</Badge>
+        <Badge color={isLive?'teal':m.status==='scheduled'?'blue':'slate'} dot>
+          {isLive?'Live':m.status==='scheduled'?'Upcoming':'Done'}
+        </Badge>
+        {m.actions > 0 && <Badge color="amber">{m.actions} actions</Badge>}
+        <button style={{ width:28,height:28,borderRadius:7,border:'none',background:'transparent',cursor:'pointer',
+          display:'flex',alignItems:'center',justifyContent:'center',color:'#cbd5e1',transition:'color 150ms' }}
+          onMouseEnter={e=>e.currentTarget.style.color='#64748b'} onMouseLeave={e=>e.currentTarget.style.color='#cbd5e1'}>
+          <Ic.more />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MeetingGridCard({ m, onSelect }) {
+  const isLive = m.status === 'in-progress';
+  return (
+    <GCard onClick={()=>onSelect(m)} style={{ padding:20, borderTop: isLive?`3px solid ${TEAL}`:'3px solid transparent' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+        <Badge color={projectColors[m.project]||'slate'}>{m.project}</Badge>
+        <Badge color={isLive?'teal':m.status==='scheduled'?'blue':'slate'} dot>
+          {isLive?'Live':m.status==='scheduled'?'Upcoming':'Done'}
+        </Badge>
+      </div>
+      <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a', lineHeight:1.35, marginBottom:8 }}>{m.title}</div>
+      <div style={{ fontSize:12, color:'#64748b', fontFamily:'Inter,sans-serif', marginBottom:14, display:'flex', gap:8 }}>
+        <span style={{ display:'flex', alignItems:'center', gap:3 }}><Ic.clock />{m.time}</span>
+        <span>·</span><span>{m.duration}</span>
+      </div>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <Avatars names={m.attendees} size={26} max={4} />
+        {m.actions > 0 && <Badge color="amber">{m.actions} actions</Badge>}
+      </div>
+    </GCard>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MEETING DETAIL PAGE
+// ══════════════════════════════════════════════════════════════════
+function DetailPage({ meeting, onBack }) {
+  const [actions, setActions] = React.useState(ACTIONS_LIST);
+  const [activeTab, setActiveTab] = React.useState('transcript');
+  const [editingTitle, setEditingTitle] = React.useState(false);
+  const [title, setTitle] = React.useState(meeting.title);
+  const [highlight, setHighlight] = React.useState(null);
+  const toggleAction = id => setActions(prev => prev.map(a => a.id===id ? {...a,done:!a.done} : a));
+  const tabs = ['transcript','summary','actions','attendees'];
+  const openCount = actions.filter(a=>!a.done).length;
+
+  return (
+    <div style={{ height:'100vh', background: BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {/* Top bar */}
+      <div style={{ ...glass(0.5), borderBottom:'1px solid rgba(255,255,255,0.6)', borderRadius:0, padding:'0 28px', flexShrink:0, height:62, display:'flex', alignItems:'center', gap:16 }}>
+        <button onClick={onBack} style={{ display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.5)',
+          border:'1px solid rgba(255,255,255,0.7)',borderRadius:9,padding:'6px 12px',cursor:'pointer',
+          color:'#475569',fontFamily:'Inter,sans-serif',fontSize:13,fontWeight:500,transition:'all 180ms' }}
+          onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.8)';}}
+          onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.5)';}}>
+          <Ic.back /> Meetings
+        </button>
+
+        {/* Title — editable */}
+        <div style={{ flex:1, minWidth:0 }}>
+          {editingTitle ? (
+            <input value={title} onChange={e=>setTitle(e.target.value)} onBlur={()=>setEditingTitle(false)} autoFocus
+              style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:16, color:'#0f172a', border:'none',
+                background:'transparent', outline:`2px solid ${TEAL}55`, borderRadius:6, padding:'2px 6px', width:'100%' }} />
+          ) : (
+            <div style={{ display:'flex', alignItems:'center', gap:8, cursor:'text' }} onClick={()=>setEditingTitle(true)}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:16, color:'#0f172a',
+                whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{title}</div>
+              <span style={{ color:'#cbd5e1', display:'flex', flexShrink:0 }}><Ic.edit /></span>
+            </div>
+          )}
+          <div style={{ fontSize:12, color:'#94a3b8', fontFamily:'Inter,sans-serif', display:'flex', gap:8, alignItems:'center', marginTop:1 }}>
+            <span>{meeting.date}, {meeting.time}</span><span>·</span><span>{meeting.duration}</span>
+            <span>·</span><Avatars names={meeting.attendees} size={16} max={4} />
+          </div>
+        </div>
+
+        {/* Badges */}
+        <div style={{ display:'flex', gap:6, alignItems:'center', flexShrink:0 }}>
+          <Badge color={projectColors[meeting.project]||'slate'}>{meeting.project}</Badge>
+          <Badge color={meeting.status==='in-progress'?'teal':meeting.status==='scheduled'?'blue':'green'} dot>
+            {meeting.status==='in-progress'?'Live':meeting.status==='scheduled'?'Upcoming':'Completed'}
+          </Badge>
+          {openCount > 0 && <Badge color="amber">{openCount} open actions</Badge>}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+          <Btn variant="ghost" size="sm" icon={<Ic.share />}>Share</Btn>
+          <Btn variant="ghost" size="sm" icon={<Ic.download />}>Export</Btn>
+          <Btn variant="subtle" size="sm" icon={<Ic.ai />}>Re-summarize</Btn>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{ ...glass(0.35), borderBottom:'1px solid rgba(255,255,255,0.5)', borderRadius:0, padding:'0 28px', flexShrink:0, display:'flex', alignItems:'center', gap:4 }}>
+        {tabs.map(t => (
+          <button key={t} onClick={()=>setActiveTab(t)} style={{
+            padding:'12px 18px', borderRadius:0, border:'none', cursor:'pointer',
+            fontFamily:'Inter,sans-serif', fontSize:13.5, fontWeight: activeTab===t?600:400, transition:'all 180ms',
+            background:'transparent', color: activeTab===t?'#0f172a':'#64748b',
+            borderBottom: activeTab===t?`2px solid ${TEAL}`:'2px solid transparent',
+          }}>
+            {t.charAt(0).toUpperCase()+t.slice(1)}
+            {t==='actions' && <span style={{ marginLeft:6, background:openCount>0?'rgba(245,158,11,0.15)':'rgba(16,185,129,0.12)', color:openCount>0?'#d97706':'#059669', borderRadius:99, padding:'1px 6px', fontSize:11, fontWeight:600 }}>{openCount}</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflow:'hidden', display:'flex' }}>
+
+        {/* TRANSCRIPT TAB */}
+        {activeTab==='transcript' && (
+          <div style={{ flex:1, overflowY:'auto', padding:'24px 28px', display:'flex', gap:20 }}>
+            {/* Transcript */}
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+                <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:16, color:'#0f172a' }}>Transcript</div>
+                <Btn variant="ghost" size="sm">Edit transcript</Btn>
+              </div>
+              {TRANSCRIPT_LINES.map((t, i) => (
+                <div key={i} style={{ display:'flex', gap:12, marginBottom:20,
+                  opacity: highlight && highlight !== t.speaker ? 0.4 : 1, transition:'opacity 200ms' }}>
+                  <div style={{ flexShrink:0, marginTop:2 }}><Avatar name={t.speaker} size={32} /></div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex', gap:10, alignItems:'baseline', marginBottom:5 }}>
+                      <span style={{ fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:13, color:'#1e293b', cursor:'pointer' }}
+                        onClick={()=>setHighlight(h=>h===t.speaker?null:t.speaker)}>{t.speaker}</span>
+                      <span style={{ fontSize:11.5, color:'#94a3b8', fontFamily:'Inter,sans-serif' }}>{t.time}</span>
+                    </div>
+                    <div style={{ fontSize:14, color:'#475569', fontFamily:'Inter,sans-serif', lineHeight:1.7,
+                      padding:'10px 14px', background:'rgba(255,255,255,0.45)', borderRadius:10, border:'1px solid rgba(226,232,240,0.4)' }}>
+                      {t.text}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sidebar — AI + quick actions */}
+            <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', gap:14 }}>
+              <GCard style={{ padding:16, background:'linear-gradient(135deg,rgba(20,184,166,0.1),rgba(99,102,241,0.06))' }}>
+                <div style={{ display:'flex', gap:8, alignItems:'flex-start', marginBottom:8 }}>
+                  <div style={{ width:28,height:28,borderRadius:8,background:'rgba(20,184,166,0.15)',display:'flex',alignItems:'center',justifyContent:'center',color:TEAL,flexShrink:0 }}><Ic.ai /></div>
+                  <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:13, color:'#0f172a' }}>AI Insight</div>
+                </div>
+                <div style={{ fontSize:12.5, color:'#475569', fontFamily:'Inter,sans-serif', lineHeight:1.65 }}>
+                  Carol owns 2 of 5 actions. Dan's API endpoint is on the critical path — delay risks the entire v2.3 timeline.
+                </div>
+              </GCard>
+              <GCard style={{ padding:16 }}>
+                <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:600, fontSize:13, color:'#0f172a', marginBottom:10 }}>Quick Actions</div>
+                {actions.slice(0,4).map(a => (
+                  <div key={a.id} onClick={()=>toggleAction(a.id)} style={{ display:'flex', gap:8, padding:'6px 0', cursor:'pointer', alignItems:'flex-start',
+                    borderBottom:'1px solid rgba(148,163,184,0.1)' }}>
+                    <div style={{ width:15,height:15,borderRadius:4,border:`1.5px solid ${a.done?TEAL:'#cbd5e1'}`,marginTop:2,flexShrink:0,
+                      background:a.done?TEAL:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',transition:'all 180ms' }}>
+                      {a.done && <Ic.check />}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12.5,fontFamily:'Inter,sans-serif',color:a.done?'#94a3b8':'#1e293b',textDecoration:a.done?'line-through':'none' }}>{a.text}</div>
+                      <div style={{ fontSize:11,color:'#94a3b8',marginTop:1 }}>{a.assignee}</div>
+                    </div>
+                  </div>
+                ))}
+              </GCard>
+            </div>
+          </div>
+        )}
+
+        {/* SUMMARY TAB */}
+        {activeTab==='summary' && (
+          <div style={{ flex:1, overflowY:'auto', padding:'28px 32px' }}>
+            <div style={{ maxWidth:720, margin:'0 auto' }}>
+              <GCard style={{ padding:'24px 28px', marginBottom:20, background:'linear-gradient(135deg,rgba(20,184,166,0.07),rgba(99,102,241,0.04))' }}>
+                <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14 }}>
+                  <div style={{ width:32,height:32,borderRadius:9,background:'rgba(20,184,166,0.15)',display:'flex',alignItems:'center',justifyContent:'center',color:TEAL }}><Ic.ai /></div>
+                  <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a' }}>AI-Generated Summary</div>
+                  <Badge color="teal">Auto</Badge>
+                </div>
+                <div style={{ fontSize:14.5, color:'#334155', fontFamily:'Inter,sans-serif', lineHeight:1.8 }}>
+                  The team aligned on the <strong>v2.3 product scope</strong>, settling on three core deliverables: a redesigned onboarding flow, design token migration, and AI summary improvements. The overall timeline is set at <strong>six weeks</strong> with a formal checkpoint at week two to assess any blockers — particularly around legacy component migration.
+                </div>
+              </GCard>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+                {[
+                  { label:'Key Decisions', color:'#6366f1', items:['v2.3 scoped to 3 features','6-week delivery timeline','Week-2 checkpoint set','Beta group of 5 customers'] },
+                  { label:'Risks & Blockers', color:'#f59e0b', items:['Token migration may take 2 weeks','Legacy component blockers','QA needs earlier involvement'] },
+                ].map(section => (
+                  <GCard key={section.label} style={{ padding:18 }}>
+                    <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:13.5, color:'#0f172a', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+                      <div style={{ width:8,height:8,borderRadius:'50%',background:section.color }} />
+                      {section.label}
+                    </div>
+                    {section.items.map((item,i) => (
+                      <div key={i} style={{ fontSize:13,fontFamily:'Inter,sans-serif',color:'#475569',padding:'5px 0',borderBottom:i<section.items.length-1?'1px solid rgba(148,163,184,0.1)':'none',lineHeight:1.5 }}>
+                        {item}
+                      </div>
+                    ))}
+                  </GCard>
+                ))}
+              </div>
+              <GCard style={{ padding:18 }}>
+                <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:13.5, color:'#0f172a', marginBottom:12 }}>Next Steps</div>
+                {actions.map(a => (
+                  <div key={a.id} onClick={()=>toggleAction(a.id)} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 0',
+                    borderBottom:'1px solid rgba(148,163,184,0.08)', cursor:'pointer' }}>
+                    <div style={{ width:17,height:17,borderRadius:5,border:`1.5px solid ${a.done?TEAL:'#cbd5e1'}`,flexShrink:0,
+                      background:a.done?TEAL:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',transition:'all 180ms' }}>
+                      {a.done && <Ic.check />}
+                    </div>
+                    <div style={{ flex:1, fontSize:13.5, fontFamily:'Inter,sans-serif', color:a.done?'#94a3b8':'#1e293b', textDecoration:a.done?'line-through':'none' }}>{a.text}</div>
+                    <div style={{ fontSize:12, color:'#94a3b8' }}>{a.assignee} · {a.due}</div>
+                    <Badge color={a.priority==='high'?'red':a.priority==='medium'?'amber':'slate'}>{a.priority}</Badge>
+                  </div>
+                ))}
+              </GCard>
+            </div>
+          </div>
+        )}
+
+        {/* ACTIONS TAB */}
+        {activeTab==='actions' && (
+          <div style={{ flex:1, overflowY:'auto', padding:'24px 28px' }}>
+            <div style={{ maxWidth:700, margin:'0 auto' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+                <div>
+                  <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:18, color:'#0f172a' }}>Action Items</div>
+                  <div style={{ fontSize:13, color:'#64748b', fontFamily:'Inter,sans-serif', marginTop:2 }}>{openCount} open · {actions.length - openCount} completed</div>
+                </div>
+                <Btn variant="primary" size="sm" icon={<Ic.plus />}>Add Action</Btn>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {actions.map(a => (
+                  <div key={a.id} onClick={()=>toggleAction(a.id)} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px',
+                    borderRadius:14, cursor:'pointer', transition:'all 200ms',
+                    background: a.done?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.6)',
+                    border: a.done?'1px solid rgba(226,232,240,0.4)':`1px solid ${a.priority==='high'?'rgba(239,68,68,0.15)':'rgba(255,255,255,0.75)'}`,
+                    boxShadow: a.done?'none':'0 1px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ width:20,height:20,borderRadius:6,border:`2px solid ${a.done?TEAL:'#cbd5e1'}`,flexShrink:0,
+                      background:a.done?TEAL:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',transition:'all 180ms' }}>
+                      {a.done && <Ic.check />}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:14,fontFamily:'Inter,sans-serif',fontWeight:500,color:a.done?'#94a3b8':'#1e293b',textDecoration:a.done?'line-through':'none' }}>{a.text}</div>
+                      <div style={{ fontSize:12,color:'#94a3b8',marginTop:3,fontFamily:'Inter,sans-serif',display:'flex',gap:8 }}>
+                        <span>From transcript at {a.source}</span><span>·</span><span>{a.assignee}</span>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+                      <span style={{ fontSize:12, color:'#94a3b8', fontFamily:'Inter,sans-serif' }}>Due {a.due}</span>
+                      <Avatar name={a.assignee} size={26} />
+                      <Badge color={a.priority==='high'?'red':a.priority==='medium'?'amber':'slate'}>{a.priority}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ATTENDEES TAB */}
+        {activeTab==='attendees' && (
+          <div style={{ flex:1, overflowY:'auto', padding:'24px 28px' }}>
+            <div style={{ maxWidth:600, margin:'0 auto' }}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:18, color:'#0f172a', marginBottom:18 }}>Attendees</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:14 }}>
+                {meeting.attendees.map(name => {
+                  const myActions = actions.filter(a => a.assignee === name);
+                  const open = myActions.filter(a=>!a.done).length;
+                  return (
+                    <GCard key={name} style={{ padding:20, textAlign:'center' }}>
+                      <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}><Avatar name={name} size={52} /></div>
+                      <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a', marginBottom:4 }}>{name}</div>
+                      {myActions.length > 0
+                        ? <Badge color={open>0?'amber':'teal'}>{open>0?`${open} open action`:'All done'}</Badge>
+                        : <span style={{ fontSize:12, color:'#94a3b8', fontFamily:'Inter,sans-serif' }}>No actions</span>
+                      }
+                    </GCard>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════
+// APP ROOT
+// ══════════════════════════════════════════════════════════════════
+function App() {
+  const [selected, setSelected] = React.useState(null);
+  return selected
+    ? <DetailPage meeting={selected} onBack={()=>setSelected(null)} />
+    : <MeetingsPage onSelect={setSelected} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(node --input-type=module)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/groq-sdk/package.json'\\); console.log\\('groq-sdk version:', pkg.version\\);\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d['version']\\)\")",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(node -e ' *)",
+      "Bash(npx --yes puppeteer@latest --version)",
+      "Bash(npm install *)"
+    ]
+  }
+}

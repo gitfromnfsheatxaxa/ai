@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoteAI — Projects</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 99px; }
+  ::selection { background: rgba(20,184,166,0.2); }
+  input, button, textarea { font-family: inherit; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px; opacity: 0.5;
+  }
+  #root { position: relative; z-index: 1; }
+  @keyframes fadeSlideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes progressFill { from { width: 0%; } to { width: var(--pct); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const TEAL = '#14b8a6';
+const BG = 'radial-gradient(ellipse at 15% 40%, rgba(20,184,166,0.10) 0%, transparent 55%), radial-gradient(ellipse at 85% 15%, rgba(148,163,184,0.10) 0%, transparent 50%), radial-gradient(ellipse at 60% 85%, rgba(99,102,241,0.07) 0%, transparent 50%), #f0f4f8';
+
+const g = (op=0.55) => ({
+  background:`rgba(255,255,255,${op})`, backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)',
+  border:'1px solid rgba(255,255,255,0.75)', boxShadow:'0 2px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)',
+});
+
+// ── Icons ───────────────────────────────────────────────────────────
+const Ic = {
+  plus:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  grid:    ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  list:    ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>,
+  mic:     ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+  check:   ()=><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  back:    ()=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+  arrow:   ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  folder:  ()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>,
+  clock:   ()=><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  users:   ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  zap:     ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  search:  ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  more:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>,
+  ai:      ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  close:   ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+};
+
+// ── Primitives ──────────────────────────────────────────────────────
+function Avatar({ name='U', size=30 }) {
+  const cs = ['#14b8a6','#6366f1','#f59e0b','#ec4899','#3b82f6','#10b981'];
+  const c = cs[name.charCodeAt(0) % cs.length];
+  return (
+    <div style={{ width:size, height:size, borderRadius:'50%', background:`${c}20`, border:`1.5px solid ${c}40`,
+      display:'flex', alignItems:'center', justifyContent:'center', fontSize:size*0.38, fontWeight:700,
+      color:c, flexShrink:0, fontFamily:'DM Sans,sans-serif' }}>
+      {name[0].toUpperCase()}
+    </div>
+  );
+}
+
+function Avatars({ names, size=26, max=4 }) {
+  const shown = names.slice(0, max);
+  const rest = names.length - max;
+  const gap = Math.round(size * 0.22);
+  return (
+    <div style={{ display:'flex', alignItems:'center', flexShrink:0 }}>
+      {shown.map((n,i) => (
+        <div key={i} style={{ marginLeft:i===0?0:-gap, position:'relative', zIndex:shown.length-i, flexShrink:0,
+          borderRadius:'50%', outline:'2.5px solid rgba(255,255,255,0.95)' }}>
+          <Avatar name={n} size={size} />
+        </div>
+      ))}
+      {rest>0 && (
+        <div style={{ marginLeft:-gap, width:size, height:size, borderRadius:'50%', background:'rgba(100,116,139,0.15)',
+          display:'flex', alignItems:'center', justifyContent:'center', fontSize:size*0.34, fontWeight:600,
+          color:'#475569', outline:'2.5px solid rgba(255,255,255,0.95)', flexShrink:0 }}>+{rest}</div>
+      )}
+    </div>
+  );
+}
+
+function Badge({ children, color='slate', dot }) {
+  const m = {
+    teal:{bg:'rgba(20,184,166,0.12)',text:'#0d9488',d:'#14b8a6'},
+    blue:{bg:'rgba(59,130,246,0.12)',text:'#2563eb',d:'#3b82f6'},
+    amber:{bg:'rgba(245,158,11,0.12)',text:'#d97706',d:'#f59e0b'},
+    red:{bg:'rgba(239,68,68,0.10)',text:'#dc2626',d:'#ef4444'},
+    slate:{bg:'rgba(100,116,139,0.12)',text:'#475569',d:'#94a3b8'},
+    purple:{bg:'rgba(139,92,246,0.12)',text:'#7c3aed',d:'#8b5cf6'},
+    green:{bg:'rgba(16,185,129,0.12)',text:'#059669',d:'#10b981'},
+    indigo:{bg:'rgba(99,102,241,0.12)',text:'#4338ca',d:'#6366f1'},
+  };
+  const c = m[color]||m.slate;
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:c.bg, color:c.text,
+      padding:'3px 9px', borderRadius:99, fontSize:12, fontWeight:500, whiteSpace:'nowrap' }}>
+      {dot && <span style={{ width:6, height:6, borderRadius:'50%', background:c.d, flexShrink:0 }}/>}
+      {children}
+    </span>
+  );
+}
+
+function Btn({ children, variant='primary', size='md', icon, onClick, style }) {
+  const [a,setA] = React.useState(false);
+  const sz = { sm:{padding:'5px 13px',fontSize:12.5}, md:{padding:'8px 18px',fontSize:13.5}, lg:{padding:'12px 26px',fontSize:15} };
+  const vs = {
+    primary:{background:`linear-gradient(135deg,${TEAL},#0d9488)`,color:'#fff',border:'none',boxShadow:`0 2px 14px rgba(20,184,166,0.3)`},
+    ghost:{background:'rgba(255,255,255,0.5)',backdropFilter:'blur(12px)',color:'#334155',border:'1px solid rgba(255,255,255,0.7)'},
+    subtle:{background:'rgba(20,184,166,0.1)',color:TEAL,border:'none'},
+  };
+  return (
+    <button onClick={onClick} onMouseDown={()=>setA(true)} onMouseUp={()=>setA(false)}
+      style={{ ...sz[size],...vs[variant], borderRadius:10, fontWeight:500, cursor:'pointer',
+        display:'inline-flex', alignItems:'center', gap:6, transition:'transform 150ms',
+        transform:a?'scale(0.97)':'scale(1)', outline:'none', whiteSpace:'nowrap', ...style }}>
+      {icon&&<span style={{ display:'flex' }}>{icon}</span>}{children}
+    </button>
+  );
+}
+
+function ProgressBar({ value, color, height=5 }) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (ref.current) {
+      ref.current.style.width = '0%';
+      requestAnimationFrame(() => { ref.current && (ref.current.style.width = `${value}%`); });
+    }
+  }, [value]);
+  return (
+    <div style={{ height, borderRadius:99, background:'rgba(148,163,184,0.15)', overflow:'hidden' }}>
+      <div ref={ref} style={{ height:'100%', background:`linear-gradient(90deg,${color},${color}cc)`, borderRadius:99, transition:'width 800ms cubic-bezier(0.4,0,0.2,1)', width:0 }} />
+    </div>
+  );
+}
+
+// ── Data ────────────────────────────────────────────────────────────
+const PROJECTS = [
+  {
+    id:1, name:'Product', color:'#14b8a6', icon:'🚀',
+    description:'Core product features, roadmap, and customer experience improvements.',
+    members:['Alice','Carol','Bob','Dan'], progress:68, meetings:14, openActions:4, totalActions:16,
+    status:'active',
+    meetings_list:[
+      { title:'Q3 Product Roadmap Review', date:'Today, 10:00 AM', dur:'52 min', attendees:['Alice','Bob','Carol','Dan'], actions:4, status:'completed' },
+      { title:'Customer Feedback Review', date:'Yesterday, 2:00 PM', dur:'60 min', attendees:['Carol','Alice'], actions:5, status:'completed' },
+      { title:'Q4 Planning Kickoff', date:'Fri, 2:00 PM', dur:'—', attendees:['Alice','Bob','Carol'], actions:0, status:'scheduled' },
+    ],
+    actions:[
+      { text:'Finalize v2.3 feature specs', assignee:'Carol', due:'Today', priority:'high', done:false },
+      { text:'Identify 5 beta pilot customers', assignee:'Carol', due:'Fri', priority:'low', done:false },
+      { text:'Share checkpoint plan', assignee:'Alice', due:'Done', priority:'low', done:true },
+      { text:'Draft Q4 OKRs', assignee:'Alice', due:'Mon', priority:'medium', done:false },
+    ],
+    insights:'Carol owns 2 high-priority items. Q4 kickoff scheduled for Friday — prep needed before then.',
+  },
+  {
+    id:2, name:'Design System', color:'#6366f1', icon:'🎨',
+    description:'Token migration, component library, and design language standardization.',
+    members:['Eve','Frank'], progress:45, meetings:8, openActions:2, totalActions:8,
+    status:'active',
+    meetings_list:[
+      { title:'Design System Sprint Planning', date:'Today, 1:30 PM', dur:'38 min', attendees:['Eve','Frank'], actions:2, status:'completed' },
+      { title:'Marketing Campaign Brief', date:'Last week', dur:'42 min', attendees:['Grace','Alice','Carol'], actions:3, status:'completed' },
+    ],
+    actions:[
+      { text:'Review token migration PR #214', assignee:'Bob', due:'Tomorrow', priority:'medium', done:false },
+      { text:'Update component storybook', assignee:'Eve', due:'Fri', priority:'low', done:false },
+      { text:'Audit dark mode tokens', assignee:'Frank', due:'Done', priority:'medium', done:true },
+    ],
+    insights:'Token migration is 45% done. PR #214 is the critical blocker this sprint.',
+  },
+  {
+    id:3, name:'Engineering', color:'#3b82f6', icon:'⚙️',
+    description:'Backend infrastructure, API development, and technical debt reduction.',
+    members:['Bob','Ivan','Dan','Judy'], progress:72, meetings:11, openActions:3, totalActions:11,
+    status:'active',
+    meetings_list:[
+      { title:'Engineering Sync', date:'Yesterday, 9:00 AM', dur:'45 min', attendees:['Bob','Ivan','Judy'], actions:3, status:'completed' },
+      { title:'API Design Review', date:'Mon, 11:00 AM', dur:'55 min', attendees:['Dan','Ivan','Bob'], actions:6, status:'completed' },
+    ],
+    actions:[
+      { text:'Finalize streaming API endpoint', assignee:'Dan', due:'Tomorrow', priority:'high', done:false },
+      { text:'Set up QA sync for Monday', assignee:'Bob', due:'Fri', priority:'medium', done:false },
+      { text:'Update API design documentation', assignee:'Ivan', due:'Fri', priority:'medium', done:false },
+      { text:'Resolve latency issues in prod', assignee:'Judy', due:'Done', priority:'high', done:true },
+    ],
+    insights:'Dan\'s API endpoint is on the critical path for v2.3. 3 open actions, all due this week.',
+  },
+  {
+    id:4, name:'Finance', color:'#f59e0b', icon:'💰',
+    description:'Investor relations, financial reporting, and budget planning.',
+    members:['Alice','Grace'], progress:90, meetings:5, openActions:1, totalActions:5,
+    status:'active',
+    meetings_list:[
+      { title:'Investor Update Prep', date:'Today, 3:00 PM', dur:'24 min', attendees:['Alice','Grace','Hank'], actions:0, status:'in-progress' },
+    ],
+    actions:[
+      { text:'Draft investor deck slides 3–5', assignee:'Alice', due:'Today', priority:'high', done:false },
+      { text:'Compile Q3 financial summary', assignee:'Grace', due:'Done', priority:'medium', done:true },
+    ],
+    insights:'90% complete. Alice\'s deck slides are due today — the last critical item before series B pitch.',
+  },
+  {
+    id:5, name:'Company', color:'#10b981', icon:'🏢',
+    description:'Company-wide initiatives, all-hands meetings, and culture building.',
+    members:['Alice','Bob','Carol','Dan','Eve','Frank'], progress:100, meetings:4, openActions:0, totalActions:4,
+    status:'complete',
+    meetings_list:[
+      { title:'Weekly All Hands', date:'Mon, 10:00 AM', dur:'30 min', attendees:['Alice','Bob','Carol','Dan','Eve','Frank'], actions:1, status:'completed' },
+    ],
+    actions:[
+      { text:'Update meeting templates in Notion', assignee:'Eve', due:'Done', priority:'low', done:true },
+      { text:'Send team survey results', assignee:'Alice', due:'Done', priority:'low', done:true },
+    ],
+    insights:'All items complete. Great week for company-wide alignment.',
+  },
+];
+
+const statusBadge = s => s==='complete' ? { color:'green', label:'Complete' } : s==='paused' ? { color:'amber', label:'Paused' } : { color:'teal', label:'Active', dot:true };
+
+// ── Project Detail ──────────────────────────────────────────────────
+function ProjectDetail({ project: p, onBack }) {
+  const [tab, setTab] = React.useState('overview');
+  const [actions, setActions] = React.useState(p.actions);
+  const toggle = i => setActions(prev => prev.map((a,idx) => idx===i ? {...a,done:!a.done} : a));
+  const sb = statusBadge(p.status);
+  const tabs = ['overview','meetings','actions','members'];
+
+  return (
+    <div style={{ height:'100vh', background:BG, display:'flex', flexDirection:'column', overflow:'hidden', animation:'fadeSlideIn 280ms ease' }}>
+      {/* Header */}
+      <div style={{ ...g(0.5), borderBottom:'1px solid rgba(255,255,255,0.6)', borderRadius:0, padding:'0 28px', flexShrink:0, minHeight:70, display:'flex', alignItems:'center', gap:16 }}>
+        <button onClick={onBack} style={{ display:'flex',alignItems:'center',gap:6,...g(0.6),border:'1px solid rgba(255,255,255,0.7)',borderRadius:9,padding:'6px 12px',cursor:'pointer',color:'#475569',fontSize:13,fontWeight:500,transition:'all 180ms',boxShadow:'none' }}
+          onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.85)'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.5)'}>
+          <Ic.back /> Projects
+        </button>
+        <div style={{ width:40,height:40,borderRadius:11,background:`${p.color}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0 }}>{p.icon}</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:20, color:'#0f172a' }}>{p.name}</div>
+          <div style={{ fontSize:12.5, color:'#64748b', fontFamily:'Inter,sans-serif', marginTop:1 }}>{p.description}</div>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+          <Badge color={sb.color} dot={sb.dot}>{sb.label}</Badge>
+          <Badge color="amber">{p.openActions} open actions</Badge>
+          <Avatars names={p.members} size={28} max={5} />
+          <Btn variant="ghost" size="sm">Settings</Btn>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div style={{ ...g(0.3), borderBottom:'1px solid rgba(255,255,255,0.5)', borderRadius:0, padding:'0 28px', flexShrink:0, display:'flex', alignItems:'center', gap:2 }}>
+        {tabs.map(t => (
+          <button key={t} onClick={()=>setTab(t)} style={{
+            padding:'12px 18px', borderRadius:0, border:'none', cursor:'pointer',
+            fontFamily:'Inter,sans-serif', fontSize:13.5, fontWeight:tab===t?600:400,
+            background:'transparent', color:tab===t?'#0f172a':'#64748b',
+            borderBottom:tab===t?`2px solid ${p.color}`:'2px solid transparent', transition:'all 180ms',
+          }}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflow:'auto', padding:'24px 28px' }}>
+
+        {/* OVERVIEW */}
+        {tab==='overview' && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16, maxWidth:1100 }}>
+            {/* Progress card — full width */}
+            <div style={{ gridColumn:'span 3' }}>
+              <div style={{ ...g(0.55), borderRadius:16, padding:'22px 26px', display:'grid', gridTemplateColumns:'1fr auto', gap:20, alignItems:'center' }}>
+                <div>
+                  <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a', marginBottom:12 }}>Overall Progress</div>
+                  <ProgressBar value={p.progress} color={p.color} height={8} />
+                  <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
+                    <span style={{ fontSize:12, color:'#64748b', fontFamily:'Inter,sans-serif' }}>{p.totalActions - p.openActions} of {p.totalActions} actions complete</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:p.color, fontFamily:'DM Sans,sans-serif' }}>{p.progress}%</span>
+                  </div>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, minWidth:400 }}>
+                  {[
+                    { v:p.meetings, l:'Meetings', color:'#0f172a' },
+                    { v:p.totalActions, l:'Total actions', color:'#0f172a' },
+                    { v:p.openActions, l:'Open', color:p.openActions>0?'#f59e0b':'#10b981' },
+                    { v:p.members.length, l:'Members', color:'#0f172a' },
+                  ].map((s,i) => (
+                    <div key={i} style={{ textAlign:'center', padding:'12px 8px', background:'rgba(255,255,255,0.45)', borderRadius:12 }}>
+                      <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:24, color:s.color }}>{s.v}</div>
+                      <div style={{ fontSize:11.5, color:'#94a3b8', fontFamily:'Inter,sans-serif', marginTop:2 }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Insight */}
+            <div style={{ ...g(0.5), borderRadius:16, padding:20, background:'linear-gradient(135deg,rgba(20,184,166,0.08),rgba(99,102,241,0.05))', gridColumn:'span 2' }}>
+              <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                <div style={{ width:32,height:32,borderRadius:9,background:'rgba(20,184,166,0.15)',display:'flex',alignItems:'center',justifyContent:'center',color:TEAL,flexShrink:0 }}><Ic.ai /></div>
+                <div>
+                  <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:14, color:'#0f172a', marginBottom:6 }}>AI Insight</div>
+                  <div style={{ fontSize:13.5, color:'#475569', fontFamily:'Inter,sans-serif', lineHeight:1.7 }}>{p.insights}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent meeting */}
+            <div style={{ ...g(0.5), borderRadius:16, padding:20 }}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:14, color:'#0f172a', marginBottom:12 }}>Latest Meeting</div>
+              {p.meetings_list[0] && (
+                <div>
+                  <div style={{ fontFamily:'Inter,sans-serif', fontWeight:600, fontSize:13.5, color:'#1e293b', marginBottom:4, lineHeight:1.35 }}>{p.meetings_list[0].title}</div>
+                  <div style={{ fontSize:12, color:'#94a3b8', marginBottom:10 }}>{p.meetings_list[0].date} · {p.meetings_list[0].dur}</div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <Avatars names={p.meetings_list[0].attendees} size={22} max={4} />
+                    {p.meetings_list[0].actions>0 && <Badge color="amber">{p.meetings_list[0].actions} actions</Badge>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Open actions preview */}
+            <div style={{ ...g(0.5), borderRadius:16, padding:20, gridColumn:'span 3' }}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:14, color:'#0f172a', marginBottom:12 }}>Open Actions</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {actions.filter(a=>!a.done).map((a,i) => (
+                  <div key={i} onClick={()=>toggle(p.actions.findIndex(x=>x.text===a.text))}
+                    style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', borderRadius:12, cursor:'pointer',
+                      background:'rgba(255,255,255,0.5)', border:'1px solid rgba(255,255,255,0.7)', transition:'all 180ms' }}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.75)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.5)'}>
+                    <div style={{ width:17,height:17,borderRadius:5,border:'1.5px solid #cbd5e1',flexShrink:0,background:'transparent' }} />
+                    <div style={{ flex:1, fontFamily:'Inter,sans-serif', fontSize:13.5, color:'#1e293b', fontWeight:500 }}>{a.text}</div>
+                    <Avatar name={a.assignee} size={24} />
+                    <span style={{ fontSize:12, color: a.due==='Today'?'#ef4444':a.due==='Tomorrow'?'#f59e0b':'#94a3b8', fontFamily:'Inter,sans-serif' }}>{a.due}</span>
+                    <Badge color={a.priority==='high'?'red':a.priority==='medium'?'amber':'slate'}>{a.priority}</Badge>
+                  </div>
+                ))}
+                {actions.filter(a=>!a.done).length===0 && (
+                  <div style={{ textAlign:'center', padding:'20px', color:'#10b981', fontFamily:'Inter,sans-serif', fontSize:14, fontWeight:500 }}>
+                    ✓ All actions complete!
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MEETINGS */}
+        {tab==='meetings' && (
+          <div style={{ maxWidth:800 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:18, color:'#0f172a' }}>{p.meetings} Meetings</div>
+              <Btn variant="primary" size="sm" icon={<Ic.plus />}>Record New</Btn>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {p.meetings_list.map((m,i) => (
+                <div key={i} style={{ ...g(0.55), borderRadius:14, padding:'14px 18px', display:'flex', alignItems:'center', gap:14,
+                  borderLeft:`3px solid ${m.status==='in-progress'?p.color:m.status==='scheduled'?'#6366f1':'rgba(226,232,240,0.8)'}`,
+                  transition:'all 200ms', cursor:'pointer' }}
+                  onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.07)'; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow=''; }}>
+                  <div style={{ width:38,height:38,borderRadius:10,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    background:m.status==='in-progress'?`${p.color}18`:'rgba(148,163,184,0.1)',color:m.status==='in-progress'?p.color:'#94a3b8' }}>
+                    <Ic.mic />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:600, fontSize:14.5, color:'#0f172a', marginBottom:3 }}>{m.title}</div>
+                    <div style={{ fontSize:12, color:'#94a3b8', display:'flex', gap:8 }}><span>{m.date}</span><span>·</span><span>{m.dur}</span></div>
+                  </div>
+                  <Avatars names={m.attendees} size={24} max={4} />
+                  <Badge color={m.status==='in-progress'?'teal':m.status==='scheduled'?'blue':'slate'} dot>
+                    {m.status==='in-progress'?'Live':m.status==='scheduled'?'Upcoming':'Done'}
+                  </Badge>
+                  {m.actions>0 && <Badge color="amber">{m.actions} actions</Badge>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ACTIONS */}
+        {tab==='actions' && (
+          <div style={{ maxWidth:700 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+              <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:18, color:'#0f172a' }}>
+                {actions.filter(a=>!a.done).length} open · {actions.filter(a=>a.done).length} done
+              </div>
+              <Btn variant="primary" size="sm" icon={<Ic.plus />}>Add Action</Btn>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {actions.map((a,i) => (
+                <div key={i} onClick={()=>toggle(i)} style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 18px', borderRadius:14,
+                  background:a.done?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.65)',
+                  border:`1px solid ${a.done?'rgba(226,232,240,0.4)':'rgba(255,255,255,0.75)'}`,
+                  cursor:'pointer', transition:'all 180ms' }}
+                  onMouseEnter={e=>!a.done&&(e.currentTarget.style.background='rgba(255,255,255,0.85)')}
+                  onMouseLeave={e=>!a.done&&(e.currentTarget.style.background='rgba(255,255,255,0.65)')}>
+                  <div style={{ width:20,height:20,borderRadius:6,border:`2px solid ${a.done?TEAL:'#cbd5e1'}`,flexShrink:0,
+                    background:a.done?TEAL:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',transition:'all 180ms' }}>
+                    {a.done&&<Ic.check />}
+                  </div>
+                  <div style={{ flex:1, fontFamily:'Inter,sans-serif', fontSize:14, fontWeight:500, color:a.done?'#94a3b8':'#1e293b', textDecoration:a.done?'line-through':'none' }}>{a.text}</div>
+                  <Avatar name={a.assignee} size={26} />
+                  <span style={{ fontSize:12.5, color:a.due==='Today'?'#ef4444':a.due==='Tomorrow'?'#f59e0b':'#94a3b8' }}>{a.due}</span>
+                  <Badge color={a.priority==='high'?'red':a.priority==='medium'?'amber':'slate'}>{a.priority}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* MEMBERS */}
+        {tab==='members' && (
+          <div style={{ maxWidth:700 }}>
+            <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:18, color:'#0f172a', marginBottom:18 }}>Team Members</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:14 }}>
+              {p.members.map(name => {
+                const myActions = p.actions.filter(a=>a.assignee===name);
+                const open = myActions.filter(a=>!a.done).length;
+                return (
+                  <div key={name} style={{ ...g(0.55), borderRadius:16, padding:'20px', textAlign:'center' }}>
+                    <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}><Avatar name={name} size={52} /></div>
+                    <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a', marginBottom:6 }}>{name}</div>
+                    <div style={{ fontSize:12, color:'#64748b', fontFamily:'Inter,sans-serif', marginBottom:10 }}>
+                      {myActions.length} action{myActions.length!==1?'s':''}
+                    </div>
+                    {myActions.length>0
+                      ? <Badge color={open>0?'amber':'green'}>{open>0?`${open} open`:'All done'}</Badge>
+                      : <Badge color="slate">No actions</Badge>
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Projects List ───────────────────────────────────────────────────
+function ProjectsList({ onSelect }) {
+  const [viewMode, setViewMode] = React.useState('grid');
+  const [search, setSearch] = React.useState('');
+  const [sf, setSf] = React.useState(false);
+  const shown = PROJECTS.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()));
+  const totalMeetings = PROJECTS.reduce((s,p)=>s+p.meetings,0);
+  const totalOpen = PROJECTS.reduce((s,p)=>s+p.openActions,0);
+
+  return (
+    <div style={{ height:'100vh', background:BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {/* Header */}
+      <div style={{ ...g(0.45), borderBottom:'1px solid rgba(255,255,255,0.6)', borderRadius:0, padding:'20px 32px 0', flexShrink:0 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:18 }}>
+          <div>
+            <div style={{ fontSize:11, fontFamily:'Inter,sans-serif', fontWeight:600, color:TEAL, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:3 }}>
+              {shown.length} projects · {totalMeetings} meetings · {totalOpen} open actions
+            </div>
+            <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:28, color:'#0f172a', letterSpacing:'-0.02em' }}>Projects</div>
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:4 }}>
+            <Btn variant="ghost" size="sm" icon={<Ic.users />}>Invite</Btn>
+            <Btn variant="primary" size="md" icon={<Ic.plus />}>New Project</Btn>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14 }}>
+          <div style={{ flex:1, display:'flex', alignItems:'center', gap:8, maxWidth:340,
+            background:sf?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.55)',
+            border:sf?`1px solid ${TEAL}55`:'1px solid rgba(255,255,255,0.7)',
+            borderRadius:11, padding:'8px 12px', transition:'all 200ms', boxShadow:sf?`0 0 0 3px ${TEAL}12`:'none' }}>
+            <span style={{ color:'#94a3b8', display:'flex', flexShrink:0 }}><Ic.search /></span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search projects…"
+              onFocus={()=>setSf(true)} onBlur={()=>setSf(false)}
+              style={{ border:'none', background:'transparent', outline:'none', fontSize:13.5, color:'#1e293b', width:'100%' }} />
+          </div>
+          <div style={{ display:'flex', gap:2, background:'rgba(255,255,255,0.45)', borderRadius:9, padding:3, border:'1px solid rgba(255,255,255,0.65)' }}>
+            {[['grid',<Ic.grid />],['list',<Ic.list />]].map(([m,ico]) => (
+              <button key={m} onClick={()=>setViewMode(m)} style={{
+                width:30, height:28, borderRadius:6, border:'none', cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', transition:'all 180ms',
+                background:viewMode===m?'rgba(255,255,255,0.95)':'transparent',
+                color:viewMode===m?TEAL:'#94a3b8',
+                boxShadow:viewMode===m?'0 1px 4px rgba(0,0,0,0.07)':'none',
+              }}>{ico}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflowY:'auto', padding:'24px 32px' }}>
+        {viewMode==='grid' ? (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:16 }}>
+            {shown.map(p => <ProjectGridCard key={p.id} p={p} onSelect={onSelect} />)}
+          </div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {shown.map(p => <ProjectListRow key={p.id} p={p} onSelect={onSelect} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProjectGridCard({ p, onSelect }) {
+  const [hov, setHov] = React.useState(false);
+  const sb = statusBadge(p.status);
+  return (
+    <div onClick={()=>onSelect(p)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ ...g(0.55), borderRadius:18, padding:'22px', cursor:'pointer', transition:'all 240ms',
+        transform:hov?'translateY(-3px)':'none',
+        boxShadow:hov?'0 10px 40px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)':'0 2px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)',
+        borderTop:`3px solid ${p.color}`,
+        animation:'fadeSlideIn 300ms ease both',
+      }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+        <div style={{ width:44,height:44,borderRadius:12,background:`${p.color}14`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22 }}>{p.icon}</div>
+        <Badge color={sb.color} dot={sb.dot}>{sb.label}</Badge>
+      </div>
+      <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:17, color:'#0f172a', marginBottom:4 }}>{p.name}</div>
+      <div style={{ fontSize:12.5, color:'#64748b', fontFamily:'Inter,sans-serif', lineHeight:1.55, marginBottom:16, minHeight:36 }}>{p.description}</div>
+      <ProgressBar value={p.progress} color={p.color} height={5} />
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:12 }}>
+        <div style={{ display:'flex', gap:12 }}>
+          <span style={{ fontSize:12, color:'#94a3b8', fontFamily:'Inter,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+            <Ic.mic />{p.meetings}
+          </span>
+          <span style={{ fontSize:12, color:p.openActions>0?'#f59e0b':'#10b981', fontFamily:'Inter,sans-serif', fontWeight:500 }}>
+            {p.openActions>0?`${p.openActions} open`:'✓ Done'}
+          </span>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <Avatars names={p.members} size={22} max={3} />
+          <span style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:15, color:p.color }}>{p.progress}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectListRow({ p, onSelect }) {
+  const [hov, setHov] = React.useState(false);
+  const sb = statusBadge(p.status);
+  return (
+    <div onClick={()=>onSelect(p)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ ...g(0.55), borderRadius:14, padding:'16px 20px', cursor:'pointer', transition:'all 200ms',
+        transform:hov?'translateY(-1px)':'none',
+        boxShadow:hov?'0 6px 24px rgba(0,0,0,0.07)':'',
+        borderLeft:`3px solid ${p.color}`,
+        display:'grid', gridTemplateColumns:'40px 1fr 180px 80px 120px 80px', alignItems:'center', gap:16,
+      }}>
+      <div style={{ width:38,height:38,borderRadius:10,background:`${p.color}14`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18 }}>{p.icon}</div>
+      <div>
+        <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:15, color:'#0f172a' }}>{p.name}</div>
+        <div style={{ fontSize:12, color:'#94a3b8', marginTop:2, fontFamily:'Inter,sans-serif', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.description}</div>
+      </div>
+      <div><ProgressBar value={p.progress} color={p.color} height={6} /></div>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:16, color:p.color }}>{p.progress}%</div>
+      </div>
+      <Avatars names={p.members} size={24} max={3} />
+      <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+        <Badge color={sb.color} dot={sb.dot}>{sb.label}</Badge>
+        {p.openActions>0 && <Badge color="amber">{p.openActions} open</Badge>}
+      </div>
+    </div>
+  );
+}
+
+// ── Root ────────────────────────────────────────────────────────────
+function App() {
+  const [selected, setSelected] = React.useState(null);
+  return selected
+    ? <ProjectDetail project={selected} onBack={()=>setSelected(null)} />
+    : <ProjectsList onSelect={setSelected} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

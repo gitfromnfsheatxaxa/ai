@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoteAI — Action Board</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 99px; }
+  ::selection { background: rgba(20,184,166,0.2); }
+  input, button, textarea { font-family: inherit; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px; opacity: 0.5;
+  }
+  #root { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const TEAL = '#14b8a6';
+const BG = 'radial-gradient(ellipse at 15% 40%, rgba(20,184,166,0.10) 0%, transparent 55%), radial-gradient(ellipse at 85% 15%, rgba(148,163,184,0.10) 0%, transparent 50%), radial-gradient(ellipse at 60% 85%, rgba(99,102,241,0.07) 0%, transparent 50%), #f0f4f8';
+
+const glassStyle = (op = 0.55) => ({
+  background: `rgba(255,255,255,${op})`,
+  backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+  border: '1px solid rgba(255,255,255,0.75)',
+  boxShadow: '0 2px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)',
+});
+
+// Icons
+const Ic = {
+  plus:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  check:   ()=><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  filter:  ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  search:  ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  kanban:  ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="11" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>,
+  list:    ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>,
+  matrix:  ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>,
+  mic:     ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+  more:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>,
+  zap:     ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  arrow:   ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+  close:   ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  flag:    ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>,
+  user:    ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  calendar:()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+};
+
+// ── Primitives ──────────────────────────────────────────────────────
+function Avatar({ name='U', size=30 }) {
+  const cs = ['#14b8a6','#6366f1','#f59e0b','#ec4899','#3b82f6','#10b981'];
+  const c = cs[name.charCodeAt(0) % cs.length];
+  return (
+    <div style={{ width:size, height:size, borderRadius:'50%', background:`${c}20`, border:`1.5px solid ${c}40`,
+      display:'flex', alignItems:'center', justifyContent:'center', fontSize:size*0.38, fontWeight:700,
+      color:c, flexShrink:0, fontFamily:'DM Sans,sans-serif' }}>
+      {name[0].toUpperCase()}
+    </div>
+  );
+}
+
+function Badge({ children, color='slate', dot }) {
+  const m = {
+    teal:{bg:'rgba(20,184,166,0.12)',text:'#0d9488',d:'#14b8a6'},
+    blue:{bg:'rgba(59,130,246,0.12)',text:'#2563eb',d:'#3b82f6'},
+    amber:{bg:'rgba(245,158,11,0.12)',text:'#d97706',d:'#f59e0b'},
+    red:{bg:'rgba(239,68,68,0.10)',text:'#dc2626',d:'#ef4444'},
+    slate:{bg:'rgba(100,116,139,0.12)',text:'#475569',d:'#94a3b8'},
+    purple:{bg:'rgba(139,92,246,0.12)',text:'#7c3aed',d:'#8b5cf6'},
+    green:{bg:'rgba(16,185,129,0.12)',text:'#059669',d:'#10b981'},
+  };
+  const c = m[color]||m.slate;
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:c.bg, color:c.text,
+      padding:'3px 9px', borderRadius:99, fontSize:12, fontWeight:500, whiteSpace:'nowrap' }}>
+      {dot && <span style={{ width:6, height:6, borderRadius:'50%', background:c.d, flexShrink:0 }}/>}
+      {children}
+    </span>
+  );
+}
+
+function Btn({ children, variant='primary', size='md', icon, onClick, style }) {
+  const [a,setA] = React.useState(false);
+  const sz = { sm:{padding:'5px 13px',fontSize:12.5}, md:{padding:'8px 18px',fontSize:13.5}, lg:{padding:'11px 24px',fontSize:14.5} };
+  const vs = {
+    primary:{background:`linear-gradient(135deg,${TEAL},#0d9488)`,color:'#fff',border:'none',boxShadow:`0 2px 12px rgba(20,184,166,0.3)`},
+    ghost:{background:'rgba(255,255,255,0.5)',backdropFilter:'blur(12px)',color:'#334155',border:'1px solid rgba(255,255,255,0.7)',boxShadow:'0 1px 4px rgba(0,0,0,0.05)'},
+    subtle:{background:'rgba(20,184,166,0.1)',color:TEAL,border:'none'},
+    danger:{background:'rgba(239,68,68,0.08)',color:'#ef4444',border:'none'},
+  };
+  return (
+    <button onClick={onClick} onMouseDown={()=>setA(true)} onMouseUp={()=>setA(false)}
+      style={{ ...sz[size],...vs[variant], borderRadius:10, fontWeight:500, cursor:'pointer',
+        display:'inline-flex', alignItems:'center', gap:6, transition:'transform 150ms',
+        transform:a?'scale(0.97)':'scale(1)', outline:'none', whiteSpace:'nowrap', ...style }}>
+      {icon && <span style={{ display:'flex' }}>{icon}</span>}{children}
+    </button>
+  );
+}
+
+// ── Data ────────────────────────────────────────────────────────────
+const INITIAL_ACTIONS = [
+  { id:1,  text:'Finalize v2.3 feature specs',        assignee:'Carol', project:'Product',  meeting:'Q3 Roadmap Review',       due:'Today',    priority:'high',   status:'todo',       tags:['specs','product'] },
+  { id:2,  text:'Draft investor deck slides 3–5',     assignee:'Alice', project:'Finance',  meeting:'Investor Update Prep',    due:'Today',    priority:'high',   status:'todo',       tags:['deck','investor'] },
+  { id:3,  text:'Review token migration PR #214',     assignee:'Bob',   project:'Design',   meeting:'Design Sprint Planning',  due:'Tomorrow', priority:'medium', status:'inprogress', tags:['pr','tokens'] },
+  { id:4,  text:'Finalize streaming API endpoint',    assignee:'Dan',   project:'Product',  meeting:'Q3 Roadmap Review',       due:'Tomorrow', priority:'high',   status:'inprogress', tags:['api','backend'] },
+  { id:5,  text:'Set up QA sync for next Monday',     assignee:'Bob',   project:'Eng',      meeting:'Engineering Sync',        due:'Fri',      priority:'medium', status:'todo',       tags:['qa','sync'] },
+  { id:6,  text:'Identify 5 beta pilot customers',    assignee:'Carol', project:'Product',  meeting:'Q3 Roadmap Review',       due:'Fri',      priority:'low',    status:'todo',       tags:['beta','customers'] },
+  { id:7,  text:'Update API design documentation',    assignee:'Ivan',  project:'Eng',      meeting:'API Design Review',       due:'Fri',      priority:'medium', status:'inprogress', tags:['docs','api'] },
+  { id:8,  text:'Share marketing brief with team',    assignee:'Grace', project:'Design',   meeting:'Marketing Campaign Brief',due:'Mon',      priority:'low',    status:'todo',       tags:['marketing'] },
+  { id:9,  text:'Share checkpoint plan with team',    assignee:'Alice', project:'Product',  meeting:'Q3 Roadmap Review',       due:'Done',     priority:'low',    status:'done',       tags:['planning'] },
+  { id:10, text:'Update meeting templates in Notion', assignee:'Eve',   project:'Company',  meeting:'Weekly All Hands',        due:'Done',     priority:'low',    status:'done',       tags:['templates'] },
+  { id:11, text:'Send NPS survey to beta users',      assignee:'Grace', project:'Product',  meeting:'Customer Feedback Review',due:'Done',     priority:'medium', status:'done',       tags:['nps','survey'] },
+];
+
+const COLS = [
+  { id:'todo',       label:'To Do',      color:'#64748b', accent:'rgba(100,116,139,0.08)' },
+  { id:'inprogress', label:'In Progress', color:TEAL,     accent:'rgba(20,184,166,0.07)' },
+  { id:'done',       label:'Done',       color:'#10b981', accent:'rgba(16,185,129,0.07)' },
+];
+
+const projColors = { Product:'teal', Design:'purple', Finance:'amber', Eng:'blue', Company:'slate' };
+const priorityColors = { high:'red', medium:'amber', low:'slate' };
+
+// ── Add Action Modal ─────────────────────────────────────────────────
+function AddModal({ onClose, onAdd }) {
+  const [text, setText] = React.useState('');
+  const [assignee, setAssignee] = React.useState('');
+  const [due, setDue] = React.useState('');
+  const [priority, setPriority] = React.useState('medium');
+  const [project, setProject] = React.useState('Product');
+  const submit = () => {
+    if (!text.trim()) return;
+    onAdd({ text, assignee: assignee||'Unassigned', due: due||'No date', priority, project, status:'todo', tags:[] });
+    onClose();
+  };
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.25)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ ...glassStyle(0.85), borderRadius:20, padding:28, width:460, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:18, color:'#0f172a' }}>New Action</div>
+          <button onClick={onClose} style={{ width:30,height:30,borderRadius:8,border:'none',background:'rgba(148,163,184,0.12)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#64748b' }}><Ic.close /></button>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div>
+            <label style={{ fontSize:11.5, fontWeight:600, color:'#64748b', fontFamily:'Inter,sans-serif', display:'block', marginBottom:6 }}>Action item *</label>
+            <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="What needs to be done?"
+              style={{ width:'100%', padding:'10px 12px', background:'rgba(255,255,255,0.7)', border:'1px solid rgba(203,213,225,0.6)',
+                borderRadius:10, fontSize:14, color:'#1e293b', resize:'none', height:80, outline:'none', lineHeight:1.5 }} />
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            {[
+              { label:'Assignee', value:assignee, set:setAssignee, placeholder:'e.g. Alice' },
+              { label:'Due date', value:due, set:setDue, placeholder:'e.g. Friday' },
+            ].map(f => (
+              <div key={f.label}>
+                <label style={{ fontSize:11.5, fontWeight:600, color:'#64748b', fontFamily:'Inter,sans-serif', display:'block', marginBottom:6 }}>{f.label}</label>
+                <input value={f.value} onChange={e=>f.set(e.target.value)} placeholder={f.placeholder}
+                  style={{ width:'100%', padding:'8px 12px', background:'rgba(255,255,255,0.7)', border:'1px solid rgba(203,213,225,0.6)',
+                    borderRadius:10, fontSize:13.5, color:'#1e293b', outline:'none' }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ fontSize:11.5, fontWeight:600, color:'#64748b', fontFamily:'Inter,sans-serif', display:'block', marginBottom:6 }}>Priority</label>
+              <div style={{ display:'flex', gap:6 }}>
+                {['high','medium','low'].map(p => (
+                  <button key={p} onClick={()=>setPriority(p)} style={{
+                    flex:1, padding:'6px 0', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:500, transition:'all 160ms',
+                    background: priority===p ? (p==='high'?'rgba(239,68,68,0.15)':p==='medium'?'rgba(245,158,11,0.15)':'rgba(100,116,139,0.12)') : 'rgba(248,250,252,0.8)',
+                    color: priority===p ? (p==='high'?'#dc2626':p==='medium'?'#d97706':'#475569') : '#94a3b8',
+                    outline: priority===p ? `1.5px solid ${p==='high'?'rgba(239,68,68,0.3)':p==='medium'?'rgba(245,158,11,0.3)':'rgba(100,116,139,0.2)'}` : 'none',
+                  }}>{p}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize:11.5, fontWeight:600, color:'#64748b', fontFamily:'Inter,sans-serif', display:'block', marginBottom:6 }}>Project</label>
+              <select value={project} onChange={e=>setProject(e.target.value)}
+                style={{ width:'100%', padding:'8px 12px', background:'rgba(255,255,255,0.7)', border:'1px solid rgba(203,213,225,0.6)',
+                  borderRadius:10, fontSize:13.5, color:'#1e293b', outline:'none', cursor:'pointer' }}>
+                {['Product','Design','Finance','Eng','Company'].map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:4 }}>
+            <Btn variant="ghost" onClick={onClose} style={{ flex:1, justifyContent:'center' }}>Cancel</Btn>
+            <Btn variant="primary" onClick={submit} style={{ flex:2, justifyContent:'center' }}>Add Action</Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Action Card ─────────────────────────────────────────────────────
+function ActionCard({ item, onMove, onToggle, colAccent, viewMode }) {
+  const [hov, setHov] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const isDone = item.status === 'done';
+  const pColor = { high:'#ef4444', medium:'#f59e0b', low:'#94a3b8' }[item.priority];
+
+  if (viewMode === 'list') {
+    return (
+      <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+        style={{ display:'flex', alignItems:'center', gap:14, padding:'11px 16px', borderRadius:12, transition:'all 200ms',
+          background: hov?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.5)',
+          border:'1px solid rgba(255,255,255,0.7)',
+          boxShadow: hov?'0 3px 12px rgba(0,0,0,0.06)':'none',
+          transform: hov?'translateY(-1px)':'none',
+          borderLeft: `3px solid ${pColor}`,
+        }}>
+        <div onClick={()=>onToggle(item.id)} style={{ width:18,height:18,borderRadius:5,border:`2px solid ${isDone?TEAL:'#cbd5e1'}`,flexShrink:0,
+          background:isDone?TEAL:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',cursor:'pointer',transition:'all 180ms' }}>
+          {isDone && <Ic.check />}
+        </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:13.5, fontFamily:'Inter,sans-serif', fontWeight:500, color:isDone?'#94a3b8':'#1e293b',
+            textDecoration:isDone?'line-through':'none', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.text}</div>
+          <div style={{ fontSize:11.5, color:'#94a3b8', marginTop:2, display:'flex', gap:8, alignItems:'center' }}>
+            <span style={{ display:'flex', alignItems:'center', gap:3 }}><Ic.mic />{item.meeting}</span>
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+          <Badge color={projColors[item.project]||'slate'}>{item.project}</Badge>
+          <Badge color={priorityColors[item.priority]}>{item.priority}</Badge>
+          <span style={{ fontSize:12, color:'#94a3b8' }}>{item.due}</span>
+          <Avatar name={item.assignee} size={24} />
+          <div style={{ display:'flex', gap:4 }}>
+            {COLS.filter(c=>c.id!==item.status).map(c => (
+              <button key={c.id} onClick={()=>onMove(item.id, c.id)} style={{ padding:'3px 8px', borderRadius:6, border:'none', background:`${c.color}15`, color:c.color, fontSize:11, cursor:'pointer', fontWeight:500 }}>→ {c.label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ padding:16, borderRadius:14, marginBottom:10, transition:'all 220ms',
+        background: hov?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.52)',
+        backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)',
+        border: `1px solid rgba(255,255,255,${hov?0.85:0.7})`,
+        boxShadow: hov?'0 6px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)':'0 1px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8)',
+        transform: hov?'translateY(-2px)':'none',
+        borderTop: `2px solid ${pColor}22`,
+        cursor:'default',
+      }}>
+      {/* Top row */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          <Badge color={projColors[item.project]||'slate'}>{item.project}</Badge>
+          <Badge color={priorityColors[item.priority]}>{item.priority}</Badge>
+        </div>
+        <div style={{ position:'relative' }}>
+          <button onClick={()=>setMenuOpen(o=>!o)} style={{ width:26,height:26,borderRadius:7,border:'none',background:menuOpen?'rgba(148,163,184,0.15)':'transparent',
+            cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#cbd5e1',transition:'all 150ms' }}
+            onMouseEnter={e=>e.currentTarget.style.color='#64748b'} onMouseLeave={e=>!menuOpen&&(e.currentTarget.style.color='#cbd5e1')}>
+            <Ic.more />
+          </button>
+          {menuOpen && (
+            <div style={{ position:'absolute', right:0, top:30, ...glassStyle(0.9), borderRadius:10, padding:6, width:160, zIndex:20, boxShadow:'0 8px 24px rgba(0,0,0,0.1)' }}>
+              {COLS.filter(c=>c.id!==item.status).map(c => (
+                <button key={c.id} onClick={()=>{ onMove(item.id, c.id); setMenuOpen(false); }} style={{
+                  display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none',
+                  background:'transparent', cursor:'pointer', fontSize:13, color:'#334155', transition:'background 150ms', textAlign:'left' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.7)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                  <span style={{ color:c.color }}>→</span> Move to {c.label}
+                </button>
+              ))}
+              <div style={{ height:1, background:'rgba(148,163,184,0.15)', margin:'4px 0' }} />
+              <button onClick={()=>{ onToggle(item.id); setMenuOpen(false); }} style={{
+                display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none',
+                background:'transparent', cursor:'pointer', fontSize:13, color:isDone?'#64748b':TEAL, textAlign:'left' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.7)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                {isDone ? '↩ Reopen' : '✓ Mark done'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Text */}
+      <div style={{ fontSize:13.5, fontFamily:'Inter,sans-serif', fontWeight:500, color:isDone?'#94a3b8':'#1e293b',
+        textDecoration:isDone?'line-through':'none', lineHeight:1.45, marginBottom:10 }}>{item.text}</div>
+
+      {/* Source meeting */}
+      <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11.5, color:'#94a3b8', marginBottom:12, fontFamily:'Inter,sans-serif' }}>
+        <Ic.mic /><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.meeting}</span>
+      </div>
+
+      {/* Footer */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <Avatar name={item.assignee} size={22} />
+          <span style={{ fontSize:12, color:'#64748b', fontFamily:'Inter,sans-serif' }}>{item.assignee}</span>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color: item.due==='Today'?'#ef4444': item.due==='Tomorrow'?'#f59e0b':'#94a3b8' }}>
+          <Ic.calendar />{item.due}
+        </div>
+      </div>
+
+      {/* Check-off button on hover */}
+      {hov && !isDone && (
+        <button onClick={()=>onToggle(item.id)} style={{ marginTop:10, width:'100%', padding:'6px', borderRadius:8, border:`1px solid ${TEAL}30`,
+          background:`${TEAL}08`, color:TEAL, cursor:'pointer', fontSize:12, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+          <Ic.check /> Mark as done
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Priority Matrix view ─────────────────────────────────────────────
+function MatrixView({ items, onMove, onToggle }) {
+  const quadrants = [
+    { label:'Urgent & Important', urgency:'high', importance:'high', color:'#ef4444', bg:'rgba(239,68,68,0.05)', border:'rgba(239,68,68,0.15)' },
+    { label:'Not Urgent, Important', urgency:'low', importance:'high', color:'#3b82f6', bg:'rgba(59,130,246,0.05)', border:'rgba(59,130,246,0.15)' },
+    { label:'Urgent, Less Important', urgency:'high', importance:'low', color:'#f59e0b', bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.15)' },
+    { label:'Not Urgent, Less Important', urgency:'low', importance:'low', color:'#94a3b8', bg:'rgba(148,163,184,0.05)', border:'rgba(148,163,184,0.15)' },
+  ];
+  const mapPriority = item => {
+    if (item.priority === 'high')   return { urgency:'high', importance:'high' };
+    if (item.priority === 'medium') return { urgency:'high', importance:'low' };
+    return { urgency:'low', importance:'low' };
+  };
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gridTemplateRows:'1fr 1fr', gap:14, height:'100%' }}>
+      {quadrants.map(q => {
+        const qItems = items.filter(i => i.status !== 'done').filter(i => { const p = mapPriority(i); return p.urgency===q.urgency && p.importance===q.importance; });
+        return (
+          <div key={q.label} style={{ background:q.bg, border:`1px solid ${q.border}`, borderRadius:16, padding:16, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexShrink:0 }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:q.color }} />
+              <span style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:13, color:'#0f172a' }}>{q.label}</span>
+              <span style={{ marginLeft:'auto', fontSize:12, color:'#94a3b8' }}>{qItems.length}</span>
+            </div>
+            <div style={{ flex:1, overflowY:'auto' }}>
+              {qItems.map(item => (
+                <div key={item.id} style={{ display:'flex', gap:8, padding:'8px 0', borderBottom:'1px solid rgba(148,163,184,0.1)', alignItems:'flex-start' }}>
+                  <div onClick={()=>onToggle(item.id)} style={{ width:15,height:15,borderRadius:4,border:`1.5px solid #cbd5e1`,marginTop:1,flexShrink:0,
+                    background:'transparent',display:'flex',alignItems:'center',justifyContent:'center',color:'white',cursor:'pointer',transition:'all 180ms' }} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12.5, fontFamily:'Inter,sans-serif', color:'#1e293b', lineHeight:1.4 }}>{item.text}</div>
+                    <div style={{ fontSize:11, color:'#94a3b8', marginTop:2, display:'flex', gap:6, alignItems:'center' }}>
+                      <Avatar name={item.assignee} size={14} />
+                      <span>{item.assignee}</span><span>·</span><span>{item.due}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {qItems.length === 0 && <div style={{ fontSize:12, color:'#cbd5e1', textAlign:'center', padding:'16px 0', fontFamily:'Inter,sans-serif' }}>No items</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main App ─────────────────────────────────────────────────────────
+function App() {
+  const [items, setItems] = React.useState(INITIAL_ACTIONS);
+  const [viewMode, setViewMode] = React.useState('kanban');
+  const [filterPriority, setFilterPriority] = React.useState('all');
+  const [filterProject, setFilterProject] = React.useState('all');
+  const [search, setSearch] = React.useState('');
+  const [showModal, setShowModal] = React.useState(false);
+  const [searchFocused, setSearchFocused] = React.useState(false);
+
+  const move = (id, newStatus) => setItems(prev => prev.map(i => i.id===id ? {...i, status:newStatus} : i));
+  const toggle = id => setItems(prev => prev.map(i => i.id===id ? {...i, status: i.status==='done'?'todo':'done'} : i));
+  const add = newItem => setItems(prev => [...prev, { ...newItem, id: Date.now() }]);
+
+  const filtered = items.filter(i => {
+    const mp = filterPriority === 'all' || i.priority === filterPriority;
+    const mpr = filterProject === 'all' || i.project === filterProject;
+    const ms = !search || i.text.toLowerCase().includes(search.toLowerCase()) || i.assignee.toLowerCase().includes(search.toLowerCase());
+    return mp && mpr && ms;
+  });
+
+  const counts = { todo: filtered.filter(i=>i.status==='todo').length, inprogress: filtered.filter(i=>i.status==='inprogress').length, done: filtered.filter(i=>i.status==='done').length };
+  const projects = ['all', ...Array.from(new Set(items.map(i=>i.project)))];
+
+  return (
+    <div style={{ width:'100vw', height:'100vh', background:BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {showModal && <AddModal onClose={()=>setShowModal(false)} onAdd={add} />}
+
+      {/* Header */}
+      <div style={{ ...glassStyle(0.45), borderBottom:'1px solid rgba(255,255,255,0.6)', borderRadius:0, padding:'18px 28px 0', flexShrink:0 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
+          <div>
+            <div style={{ fontSize:11, fontFamily:'Inter,sans-serif', fontWeight:600, color:TEAL, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:3 }}>
+              {filtered.filter(i=>i.status!=='done').length} open · {counts.done} completed
+            </div>
+            <div style={{ fontFamily:'DM Sans,sans-serif', fontWeight:800, fontSize:28, color:'#0f172a', letterSpacing:'-0.02em' }}>Action Board</div>
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:4 }}>
+            <Btn variant="ghost" size="sm" icon={<Ic.filter />}>Filter</Btn>
+            <Btn variant="primary" size="md" icon={<Ic.plus />} onClick={()=>setShowModal(true)}>New Action</Btn>
+          </div>
+        </div>
+
+        {/* Controls row */}
+        <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+          {/* Search */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:200,
+            background: searchFocused?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.55)',
+            border: searchFocused?`1px solid ${TEAL}55`:'1px solid rgba(255,255,255,0.7)',
+            borderRadius:11, padding:'8px 12px', boxShadow: searchFocused?`0 0 0 3px ${TEAL}12`:'none', transition:'all 200ms' }}>
+            <span style={{ color:'#94a3b8', display:'flex', flexShrink:0 }}><Ic.search /></span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search actions…"
+              onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)}
+              style={{ border:'none', background:'transparent', outline:'none', fontSize:13.5, color:'#1e293b', width:'100%' }} />
+            {search && <button onClick={()=>setSearch('')} style={{ border:'none',background:'none',cursor:'pointer',color:'#94a3b8',fontSize:16,lineHeight:1 }}>×</button>}
+          </div>
+
+          {/* Priority filter */}
+          <div style={{ display:'flex', gap:3, background:'rgba(255,255,255,0.45)', borderRadius:10, padding:3, border:'1px solid rgba(255,255,255,0.65)', flexShrink:0 }}>
+            {['all','high','medium','low'].map(p => (
+              <button key={p} onClick={()=>setFilterPriority(p)} style={{
+                padding:'5px 12px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12.5, fontWeight:500, transition:'all 180ms',
+                background: filterPriority===p?'rgba(255,255,255,0.95)':'transparent',
+                color: filterPriority===p ? (p==='high'?'#dc2626':p==='medium'?'#d97706':p==='low'?'#475569':'#0f172a') : '#64748b',
+                boxShadow: filterPriority===p?'0 1px 5px rgba(0,0,0,0.08)':'none',
+              }}>{p==='all'?'All priority':p.charAt(0).toUpperCase()+p.slice(1)}</button>
+            ))}
+          </div>
+
+          {/* Project filter */}
+          <div style={{ display:'flex', gap:3, background:'rgba(255,255,255,0.45)', borderRadius:10, padding:3, border:'1px solid rgba(255,255,255,0.65)', flexShrink:0 }}>
+            {projects.map(p => (
+              <button key={p} onClick={()=>setFilterProject(p)} style={{
+                padding:'5px 12px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12.5, fontWeight:500, transition:'all 180ms',
+                background: filterProject===p?'rgba(255,255,255,0.95)':'transparent',
+                color: filterProject===p?'#0f172a':'#64748b',
+                boxShadow: filterProject===p?'0 1px 5px rgba(0,0,0,0.08)':'none',
+              }}>{p==='all'?'All projects':p}</button>
+            ))}
+          </div>
+
+          {/* View mode */}
+          <div style={{ display:'flex', gap:2, background:'rgba(255,255,255,0.45)', borderRadius:9, padding:3, border:'1px solid rgba(255,255,255,0.65)', flexShrink:0 }}>
+            {[['kanban',<Ic.kanban />],['list',<Ic.list />],['matrix',<Ic.matrix />]].map(([m,ico]) => (
+              <button key={m} onClick={()=>setViewMode(m)} title={m.charAt(0).toUpperCase()+m.slice(1)} style={{
+                width:30, height:28, borderRadius:6, border:'none', cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', transition:'all 180ms',
+                background: viewMode===m?'rgba(255,255,255,0.95)':'transparent',
+                color: viewMode===m?TEAL:'#94a3b8',
+                boxShadow: viewMode===m?'0 1px 4px rgba(0,0,0,0.07)':'none',
+              }}>{ico}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Board content */}
+      <div style={{ flex:1, overflow:'hidden', padding:20 }}>
+
+        {/* KANBAN */}
+        {viewMode === 'kanban' && (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, height:'100%' }}>
+            {COLS.map(col => {
+              const colItems = filtered.filter(i => i.status === col.id);
+              return (
+                <div key={col.id} style={{ display:'flex', flexDirection:'column', minHeight:0 }}>
+                  {/* Column header */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexShrink:0 }}>
+                    <div style={{ width:9, height:9, borderRadius:'50%', background:col.color, boxShadow:`0 0 0 3px ${col.color}20` }} />
+                    <span style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:14, color:'#0f172a' }}>{col.label}</span>
+                    <div style={{ background:col.color+'18', color:col.color, borderRadius:99, padding:'2px 9px', fontSize:12, fontWeight:600, marginLeft:2 }}>{colItems.length}</div>
+                  </div>
+                  {/* Cards scroll area */}
+                  <div style={{ flex:1, overflowY:'auto', paddingRight:2, paddingBottom:8 }}>
+                    {colItems.map(item => <ActionCard key={item.id} item={item} onMove={move} onToggle={toggle} colAccent={col.accent} viewMode="kanban" />)}
+                    {colItems.length === 0 && (
+                      <div style={{ padding:'24px 16px', textAlign:'center', color:'#cbd5e1', fontFamily:'Inter,sans-serif', fontSize:13,
+                        background:'rgba(255,255,255,0.25)', borderRadius:14, border:'1.5px dashed rgba(148,163,184,0.25)' }}>
+                        No items
+                      </div>
+                    )}
+                    <button onClick={()=>setShowModal(true)} style={{ width:'100%', padding:'9px', borderRadius:10, border:'1.5px dashed rgba(148,163,184,0.25)',
+                      background:'transparent', cursor:'pointer', color:'#94a3b8', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                      marginTop:6, transition:'all 180ms' }}
+                      onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.4)'; e.currentTarget.style.color=TEAL;}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#94a3b8';}}>
+                      <Ic.plus /> Add action
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* LIST */}
+        {viewMode === 'list' && (
+          <div style={{ height:'100%', overflowY:'auto', display:'flex', flexDirection:'column', gap:20 }}>
+            {COLS.map(col => {
+              const colItems = filtered.filter(i => i.status === col.id);
+              if (colItems.length === 0) return null;
+              return (
+                <div key={col.id}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:col.color }} />
+                    <span style={{ fontFamily:'DM Sans,sans-serif', fontWeight:700, fontSize:13.5, color:'#0f172a' }}>{col.label}</span>
+                    <div style={{ flex:1, height:1, background:'rgba(148,163,184,0.12)' }} />
+                    <span style={{ fontSize:12, color:'#94a3b8' }}>{colItems.length}</span>
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {colItems.map(item => <ActionCard key={item.id} item={item} onMove={move} onToggle={toggle} viewMode="list" />)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* MATRIX */}
+        {viewMode === 'matrix' && (
+          <MatrixView items={filtered} onMove={move} onToggle={toggle} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
