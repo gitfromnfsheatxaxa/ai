@@ -3,12 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { User, LogOut, MessageSquare, Hash, Globe } from 'lucide-react';
+import { User, LogOut, MessageSquare, Hash } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
-import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { useAuthStore } from '@/store/authStore';
 
 export default function SettingsPage() {
@@ -65,23 +64,6 @@ export default function SettingsPage() {
           <Row label="Telegram username" value={user?.telegram_username ? `@${user.telegram_username}` : '—'} />
           <Row label="Account type" value="Telegram user" badge />
           <Row label="Authentication" value="Passwordless (bot magic link)" />
-        </div>
-      </GlassCard>
-
-      {/* Language */}
-      <GlassCard padding="lg" hover={false}>
-        <div className="flex items-center gap-4 mb-5">
-          <div style={{ background: 'rgba(99,102,241,0.1)', borderRadius: 9 }} className="p-2">
-            <Globe className="w-4 h-4 text-indigo-600" />
-          </div>
-          <h2 className="font-semibold text-gray-800">Language</h2>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-700 font-medium">Interface language</p>
-            <p className="text-xs text-gray-400 mt-0.5">Also controls the bot's reply language</p>
-          </div>
-          <LanguageSwitcher />
         </div>
       </GlassCard>
 
