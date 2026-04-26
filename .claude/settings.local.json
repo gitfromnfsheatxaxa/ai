@@ -8,7 +8,11 @@
       "WebFetch(domain:api.anthropic.com)",
       "Bash(node -e ' *)",
       "Bash(npx --yes puppeteer@latest --version)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git rm *)",
+      "Bash(ls web/.git)",
+      "Bash(rm -rf web/.git)",
+      "Bash(git add *)"
     ]
   }
 }
