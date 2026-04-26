@@ -78,8 +78,7 @@ export async function GET(req: NextRequest) {
 
   // 5. Impersonate — get a real user session without knowing the password
   try {
-    const userClient = await pb
-      .collection('user_ai')
+    const userClient = await (pb.collection('user_ai') as any)
       .impersonate(userAiId, 60 * 60 * 24 * 30); // 30-day session
 
     const sessionToken = userClient.authStore.token;
