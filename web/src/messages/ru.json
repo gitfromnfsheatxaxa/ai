@@ -1,0 +1,153 @@
+{
+  "common": {
+    "home": "Главная",
+    "meetings": "Встречи",
+    "actions": "Задачи",
+    "projects": "Проекты",
+    "settings": "Настройки",
+    "search": "Поиск...",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "retry": "Повторить",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "close": "Закрыть"
+  },
+  "dashboard": {
+    "welcome": "С возвращением",
+    "greeting": "Вот что происходит с вашими встречами сегодня.",
+    "stats": {
+      "meetingsThisWeek": "Встреч на этой неделе",
+      "actionsCompleted": "Задач выполнено",
+      "avgMeetingLength": "Ср. длительность встречи",
+      "aiSummaries": "Сгенерировано сводок ИИ"
+    },
+    "todayMeetings": "Сегодняшние встречи",
+    "openActions": "Открытые задачи",
+    "aiInsight": "Инсайт ИИ",
+    "quickRecord": "Быстрая запись",
+    "noMeetings": "Сегодня встреч не запланировано",
+    "noActions": "Нет открытых задач",
+    "recordMeeting": "Начать запись",
+    "viewAll": "Показать все",
+    "insight": {
+      "title": "Инсайты ИИ",
+      "summary": "На основе ваших последних встреч у вас есть 3 незавершённые задачи, которые нужно выполнить на этой неделе. Рассмотрите возможность приоритизации высокоприоритетных задач.",
+      "tip": "Совет: Подключите календарь для автоматического планирования встреч для последующих действий."
+    }
+  },
+  "meetings": {
+    "title": "Встречи",
+    "searchPlaceholder": "Поиск встреч...",
+    "filterBy": "Фильтр по",
+    "sortBy": "Сортировать по",
+    "status": {
+      "all": "Все",
+      "completed": "Завершённые",
+      "inProgress": "В процессе",
+      "scheduled": "Запланированные"
+    },
+    "view": {
+      "list": "Список",
+      "grid": "Сетка"
+    },
+    "noMeetings": "Встречи не найдены",
+    "createMeeting": "Создать встречу",
+    "meetingDetails": "Детали встречи",
+    "transcript": "Транскрипт",
+    "summary": "Сводка",
+    "decisions": "Решения",
+    "topics": "Темы",
+    "actions": "Задачи"
+  },
+  "actions": {
+    "title": "Доска задач",
+    "newAction": "Новая задача",
+    "columns": {
+      "todo": "К выполнению",
+      "inProgress": "В процессе",
+      "done": "Выполнено"
+    },
+    "priority": {
+      "low": "Низкий",
+      "medium": "Средний",
+      "high": "Высокий"
+    },
+    "noActions": "Задач пока нет",
+    "createNew": "Создайте свою первую задачу",
+    "description": "Описание",
+    "assignee": "Исполнитель",
+    "dueDate": "Срок",
+    "project": "Проект"
+  },
+  "auth": {
+    "login": "Вход",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "loginWithEmail": "Войти через email",
+    "loginWithTelegram": "Продолжить через Telegram",
+    "or": "или",
+    "dontHaveAccount": "Нет аккаунта?",
+    "createAccount": "Создать аккаунт",
+    "forgotPassword": "Забыли пароль?",
+    "welcome": "Добро пожаловать в AI Meeting Notes",
+    "description": "Ваш интеллектуальный помощник для встреч"
+  },
+  "settings": {
+    "title": "Настройки",
+    "profile": "Профиль",
+    "language": "Язык",
+    "notifications": "Уведомления",
+    "appearance": "Внешний вид",
+    "integrations": "Интеграции",
+    "account": "Аккаунт",
+    "logout": "Выйти",
+    "changePassword": "Сменить пароль",
+    "deleteAccount": "Удалить аккаунт"
+  },
+  "time": {
+    "justNow": "Только что",
+    "minutesAgo": "{count} мин. назад",
+    "hoursAgo": "{count} ч. назад",
+    "daysAgo": "{count} дн. назад",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "thisWeek": "На этой неделе",
+    "thisMonth": "В этом месяце"
+  },
+  "plural": {
+    "meeting": {
+      "one": "встреча",
+      "few": "встречи",
+      "many": "встреч",
+      "other": "встреч"
+    },
+    "action": {
+      "one": "задача",
+      "few": "задачи",
+      "many": "задач",
+      "other": "задач"
+    },
+    "minute": {
+      "one": "минута",
+      "few": "минуты",
+      "many": "минут",
+      "other": "минут"
+    },
+    "hour": {
+      "one": "час",
+      "few": "часа",
+      "many": "часов",
+      "other": "часов"
+    },
+    "day": {
+      "one": "день",
+      "few": "дня",
+      "many": "дней",
+      "other": "дней"
+    }
+  }
+}

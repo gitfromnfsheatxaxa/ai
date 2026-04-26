@@ -1,0 +1,143 @@
+{
+  "common": {
+    "home": "Home",
+    "meetings": "Meetings",
+    "actions": "Actions",
+    "projects": "Projects",
+    "settings": "Settings",
+    "search": "Search...",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "greeting": "Here's what's happening with your meetings today.",
+    "stats": {
+      "meetingsThisWeek": "Meetings This Week",
+      "actionsCompleted": "Actions Completed",
+      "avgMeetingLength": "Avg. Meeting Length",
+      "aiSummaries": "AI Summaries Generated"
+    },
+    "todayMeetings": "Today's Meetings",
+    "openActions": "Open Actions",
+    "aiInsight": "AI Insight",
+    "quickRecord": "Quick Record",
+    "noMeetings": "No meetings scheduled for today",
+    "noActions": "No open actions",
+    "recordMeeting": "Start Recording",
+    "viewAll": "View All",
+    "insight": {
+      "title": "AI Insights",
+      "summary": "Based on your recent meetings, you have 3 pending action items that are due this week. Consider prioritizing the high-priority items.",
+      "tip": "Pro Tip: Connect your calendar to automatically schedule follow-up meetings."
+    }
+  },
+  "meetings": {
+    "title": "Meetings",
+    "searchPlaceholder": "Search meetings...",
+    "filterBy": "Filter by",
+    "sortBy": "Sort by",
+    "status": {
+      "all": "All",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "scheduled": "Scheduled"
+    },
+    "view": {
+      "list": "List View",
+      "grid": "Grid View"
+    },
+    "noMeetings": "No meetings found",
+    "createMeeting": "Create Meeting",
+    "meetingDetails": "Meeting Details",
+    "transcript": "Transcript",
+    "summary": "Summary",
+    "decisions": "Decisions",
+    "topics": "Topics",
+    "actions": "Actions"
+  },
+  "actions": {
+    "title": "Action Board",
+    "newAction": "New Action",
+    "columns": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "done": "Done"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "noActions": "No actions yet",
+    "createNew": "Create your first action item",
+    "description": "Description",
+    "assignee": "Assignee",
+    "dueDate": "Due Date",
+    "project": "Project"
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "loginWithEmail": "Login with Email",
+    "loginWithTelegram": "Continue with Telegram",
+    "or": "or",
+    "dontHaveAccount": "Don't have an account?",
+    "createAccount": "Create Account",
+    "forgotPassword": "Forgot password?",
+    "welcome": "Welcome to AI Meeting Notes",
+    "description": "Your intelligent meeting companion"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "language": "Language",
+    "notifications": "Notifications",
+    "appearance": "Appearance",
+    "integrations": "Integrations",
+    "account": "Account",
+    "logout": "Logout",
+    "changePassword": "Change Password",
+    "deleteAccount": "Delete Account"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "thisMonth": "This month"
+  },
+  "plural": {
+    "meeting": {
+      "one": "meeting",
+      "other": "meetings"
+    },
+    "action": {
+      "one": "action",
+      "other": "actions"
+    },
+    "minute": {
+      "one": "minute",
+      "other": "minutes"
+    },
+    "hour": {
+      "one": "hour",
+      "other": "hours"
+    },
+    "day": {
+      "one": "day",
+      "other": "days"
+    }
+  }
+}

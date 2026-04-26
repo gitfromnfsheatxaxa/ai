@@ -1,0 +1,143 @@
+{
+  "common": {
+    "home": "Bosh sahifa",
+    "meetings": "Yig'ilishlar",
+    "actions": "Vazifalar",
+    "projects": "Loyihalar",
+    "settings": "Sozlamalar",
+    "search": "Qidiruv...",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik",
+    "retry": "Qayta urinmoq",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "add": "Qo'shish",
+    "close": "Yopish"
+  },
+  "dashboard": {
+    "welcome": "Qaytganingiz bilan",
+    "greeting": "Bugun yig'ilishlaringiz bilan nimalar bo'layotgani.",
+    "stats": {
+      "meetingsThisWeek": "Bu haftadagi yig'ilishlar",
+      "actionsCompleted": "Bajarilgan vazifalar",
+      "avgMeetingLength": "O'rt. yig'ilish davomiyligi",
+      "aiSummaries": "AI tomonidan yaratilgan xulosalar"
+    },
+    "todayMeetings": "Bugungi yig'ilishlar",
+    "openActions": "Ochiq vazifalar",
+    "aiInsight": "AI Insayt",
+    "quickRecord": "Tezkor yozuv",
+    "noMeetings": "Bugun yig'ilish rejalashtirilmagan",
+    "noActions": "Ochiq vazifalar yo'q",
+    "recordMeeting": "Yozuvni boshlash",
+    "viewAll": "Barchasini ko'rish",
+    "insight": {
+      "title": "AI Insaytlar",
+      "summary": "So'nggi yig'ilishlaringizga asosan, sizda bu hafta bajarilishi kerak bo'lgan 3 ta kutilayotgan vazifa bor. Yuqori prioritetli vazifalarni ustuvor qilishni ko'rib chiqing.",
+      "tip": "Maslahat: Davom etuvchi yig'ilishlarni avtomatik rejalashtirish uchun kalendar'ingizni ulang."
+    }
+  },
+  "meetings": {
+    "title": "Yig'ilishlar",
+    "searchPlaceholder": "Yig'ilishlarni qidirish...",
+    "filterBy": "Bo'yicha saralash",
+    "sortBy": "Bo'yicha tartiblash",
+    "status": {
+      "all": "Barchasi",
+      "completed": "Tugallangan",
+      "inProgress": "Jarayonda",
+      "scheduled": "Rejalashtirilgan"
+    },
+    "view": {
+      "list": "Ro'yxat ko'rinishi",
+      "grid": "Tarmoq ko'rinishi"
+    },
+    "noMeetings": "Yig'ilishlar topilmadi",
+    "createMeeting": "Yig'ilish yaratish",
+    "meetingDetails": "Yig'ilish tafsilotlari",
+    "transcript": "Transkript",
+    "summary": "Xulosa",
+    "decisions": "Qarorlar",
+    "topics": "Mavzular",
+    "actions": "Vazifalar"
+  },
+  "actions": {
+    "title": "Vazifalar taxtasi",
+    "newAction": "Yangi vazifa",
+    "columns": {
+      "todo": "Bajarish kerak",
+      "inProgress": "Jarayonda",
+      "done": "Bajarildi"
+    },
+    "priority": {
+      "low": "Past",
+      "medium": "O'rta",
+      "high": "Yuqori"
+    },
+    "noActions": "Hali vazifalar yo'q",
+    "createNew": "O'zingizning birinchi vazifangizni yarating",
+    "description": "Tavsif",
+    "assignee": "Ijrochi",
+    "dueDate": "Muddat",
+    "project": "Loyiha"
+  },
+  "auth": {
+    "login": "Kirish",
+    "email": "Elektron pochta",
+    "password": "Parol",
+    "loginWithEmail": "Elektron pochta orqali kirish",
+    "loginWithTelegram": "Telegram orqali davom etish",
+    "or": "yoki",
+    "dontHaveAccount": "Hisobingiz yo'qmi?",
+    "createAccount": "Hisob yaratish",
+    "forgotPassword": "Parolni unutdingizmi?",
+    "welcome": "AI Meeting Notes'ga xush kelibsiz",
+    "description": "Sizning aqlli yig'ilish yordamchingiz"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "profile": "Profil",
+    "language": "Til",
+    "notifications": "Bildirishnomalar",
+    "appearance": "Ko'rinish",
+    "integrations": "Integratsiyalar",
+    "account": "Hisob",
+    "logout": "Chiqish",
+    "changePassword": "Parolni o'zgartirish",
+    "deleteAccount": "Hisobni o'chirish"
+  },
+  "time": {
+    "justNow": "Hozirgina",
+    "minutesAgo": "{count} daqiqa oldin",
+    "hoursAgo": "{count} soat oldin",
+    "daysAgo": "{count} kun oldin",
+    "today": "Bugun",
+    "yesterday": "Kecha",
+    "thisWeek": "Bu hafta",
+    "thisMonth": "Bu oy"
+  },
+  "plural": {
+    "meeting": {
+      "one": "yig'ilish",
+      "other": "yig'ilishlar"
+    },
+    "action": {
+      "one": "vazifa",
+      "other": "vazifalar"
+    },
+    "minute": {
+      "one": "daqiqa",
+      "other": "daqiqalar"
+    },
+    "hour": {
+      "one": "soat",
+      "other": "soatlar"
+    },
+    "day": {
+      "one": "kun",
+      "other": "kunlar"
+    }
+  }
+}
